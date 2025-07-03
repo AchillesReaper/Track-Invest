@@ -2,10 +2,11 @@
 import { useEffect, useRef, useState, type JSX } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, CircularProgress, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, CircularProgress, Container, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 import { AccountCircle } from '@mui/icons-material';
 
 import MenuIcon from '@mui/icons-material/Menu';
+import { btnBox } from './components/ZCommonComponents';
 
 // local components
 
@@ -13,11 +14,9 @@ import MenuIcon from '@mui/icons-material/Menu';
 // date time
 
 export default function App() {
-    // 1. LHS: app bar + content view 
-    const [appBarHeight, setAppBarHeight] = useState<number>(50)     //create ref height from app bar
+    // 1. LHS: app bar
+    const [appBarHeight, setAppBarHeight] = useState<number>(0)     //create ref height from app bar
     const appBarRef = useRef<HTMLDivElement>(null);
-
-    const [view, setView] = useState<JSX.Element>(<CircularProgress />)
 
     // 2. set up the drawer list
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
@@ -38,7 +37,12 @@ export default function App() {
             </List>
         </Box>
 
+    // 3. view content
+    const [view, setView] = useState<JSX.Element>(
+        <Box sx={btnBox}> <CircularProgress size='5rem' /> </Box>
+    )
 
+    // ************ side effects ************
 
     useEffect(() => {    // Get the height of the AppBar
         if (!appBarRef.current) return;
@@ -47,20 +51,22 @@ export default function App() {
 
 
     return (
-        <Box>
+        <Box sx={{ minHeight: '100vh' }}>
             {/* LHS: app bar + content view*/}
-            <AppBar position='sticky' ref={appBarRef} sx={{ width: { md: `calc(100% - ${drawerWidth}px)`, xs: '100%' } }}>
-                <Toolbar variant="dense">
-                    <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                        My Investment Diary
-                    </Typography>
-                    <IconButton color="inherit" sx={{ display: { md: 'none' } }} onClick={() => setDrawerOpen(true)} >
-                        <MenuIcon />
-                    </IconButton>
+            <Box sx={{ width: { md: `calc(100% - ${drawerWidth}px)`, xs: '100%' } }}>
+                <AppBar position='sticky' ref={appBarRef}>
+                    <Toolbar variant="dense">
+                        <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
+                            Portfolio Name
+                        </Typography>
+                        <IconButton color="inherit" sx={{ display: { md: 'none' } }} onClick={() => setDrawerOpen(true)} >
+                            <MenuIcon />
+                        </IconButton>
 
-                </Toolbar>
-            </AppBar>
-            {view}
+                    </Toolbar>
+                </AppBar>
+                {view}
+            </Box>
 
             {/* RHS: side menu */}
             {/* xs view */}
