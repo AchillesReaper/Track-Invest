@@ -18,7 +18,6 @@ export default function App() {
 
     const [view, setView] = useState<JSX.Element>(<CircularProgress />)
 
-
     // 2. set up the drawer list
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
     const [drawerWidth, setDrawerWidth] = useState<number>(250)
@@ -37,32 +36,31 @@ export default function App() {
 
     useEffect(() => {    // Get the height of the AppBar
         if (!appBarRef.current) return;
-        setAppBarHeight(appBarRef.current.getBoundingClientRect().height); 
+        setAppBarHeight(appBarRef.current.getBoundingClientRect().height);
     }, [appBarRef])
 
 
     return (
         <Box>
             {/* LHS: app bar + content view*/}
-            <Box sx={{ width: { md: `calc(100% - ${drawerWidth}px)`, xs: '100%' } }}>
-                <AppBar position='sticky' ref={appBarRef}>
-                    <Toolbar>
-                        <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                            My Investment Diary
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-                {/* xs view */}
-                <Drawer anchor='right' sx={{ display: { md: 'none' } }} open={drawOpen} onClose={() => setDrawerOpen(false)}>
-                    {drawerList}
-                </Drawer>
-                {/* md view */}
-                <Drawer anchor='right' sx={{ display: { xs: 'none', md: 'block' } }} variant='permanent'>
-                    {drawerList}
-                </Drawer>
+            <AppBar position='sticky' ref={appBarRef} sx={{ width: { md: `calc(100% - ${drawerWidth}px)`, xs: '100%' } }}>
+                <Toolbar>
+                    <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
+                        My Investment Diary
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            {view}
 
-            </Box>
             {/* RHS: side menu */}
+            {/* xs view */}
+            <Drawer anchor='right' sx={{ display: { md: 'none' } }} open={drawOpen} onClose={() => setDrawerOpen(false)}>
+                {drawerList}
+            </Drawer>
+            {/* md view */}
+            <Drawer anchor='right' sx={{ display: { xs: 'none', md: 'block' } }} variant='permanent'>
+                {drawerList}
+            </Drawer>
 
 
 
