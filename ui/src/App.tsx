@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState, type JSX } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, CircularProgress, Drawer, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, CircularProgress, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 import { AccountCircle } from '@mui/icons-material';
 
+import MenuIcon from '@mui/icons-material/Menu';
 
 // local components
 
@@ -30,6 +31,11 @@ export default function App() {
                     <ListItemText primary={'user name'} sx={{ color: 'white' }} />
                 </ListItem>
             </List>
+            <List>
+                <ListItem >
+
+                </ListItem>
+            </List>
         </Box>
 
 
@@ -44,10 +50,14 @@ export default function App() {
         <Box>
             {/* LHS: app bar + content view*/}
             <AppBar position='sticky' ref={appBarRef} sx={{ width: { md: `calc(100% - ${drawerWidth}px)`, xs: '100%' } }}>
-                <Toolbar>
+                <Toolbar variant="dense">
                     <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
                         My Investment Diary
                     </Typography>
+                    <IconButton color="inherit" sx={{ display: { md: 'none' } }} onClick={() => setDrawerOpen(true)} >
+                        <MenuIcon />
+                    </IconButton>
+
                 </Toolbar>
             </AppBar>
             {view}
