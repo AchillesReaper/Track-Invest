@@ -7,6 +7,9 @@ import { AccountCircle } from '@mui/icons-material';
 
 import MenuIcon from '@mui/icons-material/Menu';
 import { btnBox } from './components/ZCommonComponents';
+import AccountSummary from './components/AccountSummary';
+import ChartPositionAllocation from './components/ChartPositionAllocation';
+import ChartPnL from './components/ChartPnL';
 
 // local components
 
@@ -20,7 +23,7 @@ export default function App() {
 
     // 2. set up the drawer list
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
-    const [drawerWidth, setDrawerWidth] = useState<number>(250)
+    const [drawerWidth, setDrawerWidth] = useState<number>(0)
 
     const drawerList =
         <Box sx={{ width: drawerWidth, ml: 0, mt: 0, display: 'block' }} onClick={() => setDrawerOpen(false)}>
@@ -49,6 +52,9 @@ export default function App() {
         setAppBarHeight(appBarRef.current.getBoundingClientRect().height);
     }, [appBarRef])
 
+    useEffect(() => { // when user logged in 
+        setDrawerWidth(250)
+    }, [])
 
     return (
         <Box sx={{ minHeight: '100vh' }}>
@@ -65,16 +71,22 @@ export default function App() {
 
                     </Toolbar>
                 </AppBar>
-                {view}
+                <div className="container mx-auto p-3 max-w-5xl">
+                    <AccountSummary />
+                    <div className="flex flex-row justify-between">
+                        <ChartPositionAllocation />
+                        <ChartPnL/>
+                    </div>
+                </div>
             </Box>
 
             {/* RHS: side menu */}
             {/* xs view */}
-            <Drawer anchor='right' sx={{ display: { md: 'none' } }} open={drawOpen} onClose={() => setDrawerOpen(false)}>
+            <Drawer anchor='right' variant="temporary" sx={{ display: { md: 'none' } }} open={drawOpen} onClose={() => setDrawerOpen(false)}>
                 {drawerList}
             </Drawer>
             {/* md view */}
-            <Drawer anchor='right' sx={{ display: { xs: 'none', md: 'block' } }} variant='permanent'>
+            <Drawer anchor='right' variant='permanent' sx={{ display: { xs: 'none', md: 'block' } }} >
                 {drawerList}
             </Drawer>
 
