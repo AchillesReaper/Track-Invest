@@ -17,11 +17,11 @@ import ChartPnL from './components/ChartPnL';
 // date time
 
 export default function App() {
-    // 1. LHS: app bar
+    // ---------- 1. LHS: app bar ----------
     const [appBarHeight, setAppBarHeight] = useState<number>(0)     //create ref height from app bar
     const appBarRef = useRef<HTMLDivElement>(null);
 
-    // 2. set up the drawer list
+    // 2. ---------- set up the drawer list ----------
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
     const [drawerWidth, setDrawerWidth] = useState<number>(0)
 
@@ -40,7 +40,7 @@ export default function App() {
             </List>
         </Box>
 
-    // 3. view content
+    // ---------- 3. view content ----------
     const [view, setView] = useState<JSX.Element>(
         <Box sx={btnBox}> <CircularProgress size='5rem' /> </Box>
     )
@@ -73,7 +73,7 @@ export default function App() {
                 </AppBar>
                 <div className="container mx-auto p-3 max-w-5xl">
                     <AccountSummary />
-                    <div className="flex flex-row justify-between">
+                    <div className="flex flex-wrap justify-around min-h-150 h-64">
                         <ChartPositionAllocation />
                         <ChartPnL/>
                     </div>
