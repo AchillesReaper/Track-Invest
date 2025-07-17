@@ -54,7 +54,7 @@ export default function ChartPositionAllocation() {
 
 
     return (
-        <div className="elementCardR2 ">
+        <div className="elementCardR2 md:grow-0">
             <PieChart  {...setting} />
         </div>
     );

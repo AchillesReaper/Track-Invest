@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type JSX } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, Button, CircularProgress, Container, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, CircularProgress, Container, Drawer, Grid, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 import { AccountCircle } from '@mui/icons-material';
 
 import MenuIcon from '@mui/icons-material/Menu';
@@ -10,6 +10,7 @@ import { btnBox } from './components/ZCommonComponents';
 import AccountSummary from './components/AccountSummary';
 import ChartPositionAllocation from './components/ChartPositionAllocation';
 import ChartPnL from './components/ChartPnL';
+import DetailTables from './components/DetailTables';
 
 // local components
 
@@ -17,28 +18,26 @@ import ChartPnL from './components/ChartPnL';
 // date time
 
 export default function App() {
-    // ---------- 1. LHS: app bar ----------
-    const [appBarHeight, setAppBarHeight] = useState<number>(0)     //create ref height from app bar
-    const appBarRef = useRef<HTMLDivElement>(null);
-
     // 2. ---------- set up the drawer list ----------
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
-    const [drawerWidth, setDrawerWidth] = useState<number>(0)
-
     const drawerList =
-        <Box sx={{ width: drawerWidth, ml: 0, mt: 0, display: 'block' }} onClick={() => setDrawerOpen(false)}>
-            <List sx={{ backgroundColor: '#1976d2', height: appBarHeight, padding: 0, boxShadow: 3 }} >
-                <ListItem >
-                    <ListItemIcon> < AccountCircle /> </ListItemIcon>
-                    <ListItemText primary={'user name'} sx={{ color: 'white' }} />
-                </ListItem>
-            </List>
+        <div className="w-[250px] h-full sticky" onClick={() => setDrawerOpen(false)}>
+            <AppBar position='sticky'>
+                <Toolbar variant="dense" >
+                    <IconButton color="inherit" onClick={() => setDrawerOpen(true)} >
+                        < AccountCircle />
+                    </IconButton>
+                    <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
+                        {'user name'}
+                    </Typography>
+                </Toolbar>
+            </AppBar>
             <List>
                 <ListItem >
 
                 </ListItem>
             </List>
-        </Box>
+        </div>
 
     // ---------- 3. view content ----------
     const [view, setView] = useState<JSX.Element>(
@@ -47,52 +46,39 @@ export default function App() {
 
     // ************ side effects ************
 
-    useEffect(() => {    // Get the height of the AppBar
-        if (!appBarRef.current) return;
-        setAppBarHeight(appBarRef.current.getBoundingClientRect().height);
-    }, [appBarRef])
-
-    useEffect(() => { // when user logged in 
-        setDrawerWidth(250)
-    }, [])
-
     return (
-        <Box sx={{ minHeight: '100vh' }}>
-            {/* LHS: app bar + content view*/}
-            <Box sx={{ width: { md: `calc(100% - ${drawerWidth}px)`, xs: '100%' } }}>
-                <AppBar position='sticky' ref={appBarRef}>
+        <Box sx={{ minHeight: '100vh', display: 'flex' }}>
+            {/* md view */}
+            <Drawer anchor='left' variant='permanent' sx={{ display: { xs: 'none', md: 'block' }, width: 250 }} >
+                {drawerList}
+            </Drawer>
+            {/* xs view */}
+            <Drawer anchor='left' variant="temporary" sx={{ display: { md: 'none' } }} open={drawOpen} onClose={() => setDrawerOpen(false)}>
+                {drawerList}
+            </Drawer>
+
+            <Box sx={{ flexGrow: 1, flexShrink: 1, display: 'flex', flexDirection: 'column' }}>
+                <AppBar position='sticky'>
                     <Toolbar variant="dense">
-                        <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                            Portfolio Name
-                        </Typography>
                         <IconButton color="inherit" sx={{ display: { md: 'none' } }} onClick={() => setDrawerOpen(true)} >
                             <MenuIcon />
                         </IconButton>
-
+                        <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
+                            Portfolio Name
+                        </Typography>
                     </Toolbar>
                 </AppBar>
-                <div className="container mx-auto p-3 max-w-5xl">
+                <div className="grid grid-cols-1">
                     <AccountSummary />
-                    <div className="flex flex-wrap justify-around min-h-150 h-64">
+                    <div className="mainRow2">
                         <ChartPositionAllocation />
-                        <ChartPnL/>
+                        <ChartPnL />
                     </div>
+                    <DetailTables />
                 </div>
             </Box>
-
-            {/* RHS: side menu */}
-            {/* xs view */}
-            <Drawer anchor='right' variant="temporary" sx={{ display: { md: 'none' } }} open={drawOpen} onClose={() => setDrawerOpen(false)}>
-                {drawerList}
-            </Drawer>
-            {/* md view */}
-            <Drawer anchor='right' variant='permanent' sx={{ display: { xs: 'none', md: 'block' } }} >
-                {drawerList}
-            </Drawer>
-
-
-
         </Box>
+
     )
 }
 

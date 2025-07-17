@@ -1,6 +1,3 @@
-
-
-
 import { LineChart } from '@mui/x-charts/LineChart';
 import { portfolioPosition, accumPnL } from './ZDummyDB';
 
@@ -18,7 +15,7 @@ export default function ChartPnL() {
     const pnlVal = Object.values(accumPnL)
 
     return (
-        <div className="elementCardR2 sm:w-1/2 lg:w-3/5 xl:w-2/3">
+        <div className="elementCardR2">
             <LineChart
                 height={300}
                 grid={{ horizontal: true }}
