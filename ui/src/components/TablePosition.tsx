@@ -25,7 +25,7 @@ export default function TbPosition() {
     ]
 
     useEffect(() => {
-        const assetData = Object.entries(assetAllocation).flatMap(([assetType, assetDetail]) => {
+        const assetData = Object.values(assetAllocation).flatMap((assetDetail) => {
             return Object.entries(assetDetail).map(([ticker, stockDetail]) => {
                 const cost = stockDetail.cost;
                 const amount = stockDetail.amount;

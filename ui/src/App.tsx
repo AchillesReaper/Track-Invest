@@ -1,12 +1,11 @@
 // react components
-import { useEffect, useRef, useState, type JSX } from 'react';
+import { useState } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, Button, CircularProgress, Container, Drawer, Grid, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Drawer, IconButton, List, ListItem, Toolbar, Typography } from '@mui/material';
 import { AccountCircle } from '@mui/icons-material';
 
 import MenuIcon from '@mui/icons-material/Menu';
-import { btnBox } from './components/ZCommonComponents';
 import AccountSummary from './components/AccountSummary';
 import ChartPositionAllocation from './components/ChartPositionAllocation';
 import ChartPnL from './components/ChartPnL';
@@ -40,9 +39,9 @@ export default function App() {
         </div>
 
     // ---------- 3. view content ----------
-    const [view, setView] = useState<JSX.Element>(
-        <Box sx={btnBox}> <CircularProgress size='5rem' /> </Box>
-    )
+    // const [view, setView] = useState<JSX.Element>(
+    //     <Box sx={btnBox}> <CircularProgress size='5rem' /> </Box>
+    // )
 
     // ************ side effects ************
 
