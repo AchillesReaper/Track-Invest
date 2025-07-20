@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -14,7 +14,7 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -moz-osx-font-smoothing: grayscale; */
 }
 
 a {
@@ -29,7 +29,7 @@ a:hover {
 
 body {
   margin: 0;
-  background: linear-gradient(180deg, #08210c 0%, #b8fffb 100%);
+  /* background: linear-gradient(180deg, #08210c 0%, #b8fffb 100%); */
   /* display: flex; */
   /* place-items: center; */
   min-width: 320px;
@@ -42,29 +42,37 @@ h1 {
 }
 
 
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
   }
 
-  a:hover {
+  /* a:hover {
     color: #747bff;
   }
 
   button {
     background-color: #f9f9f9;
-  }
+  } */
 }
 
 /* customer style */
+.main {
+  background: linear-gradient(180deg, #08210c 0%, #b8fffb 100%);
+
+}
+
+
+
 @layer components {
   .mainRow1 {
     @apply flex flex-row flex-wrap justify-between w-full;
   }
 
   .mainRow2 {
-    @apply flex flex-row flex-wrap justify-around w-full ;
+    @apply flex flex-row flex-wrap justify-around w-full;
   }
 
   .mainRow3 {
@@ -75,10 +83,12 @@ h1 {
     @apply bg-[#1a7d75e8] p-0 m-2 rounded-lg shadow-xl max-w-48 grow text-center;
     min-width: 150px;
   }
-  .cardR1text1{
+
+  .cardR1text1 {
     @apply text-white text-xs;
   }
-  .cardR1text2{
+
+  .cardR1text2 {
     @apply text-white text-lg font-bold;
   }
 

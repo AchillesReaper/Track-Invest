@@ -18,15 +18,6 @@ import { auth } from './utils/firebaseConfig';
 import AddNewPortfolio from './components/AddNewPortfolio';
 import { AppContext } from './utils/contexts';
 
-// date time
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.tz.setDefault("Australia/Sydney");
-
-
 
 export default function App() {
     const [isLoggedin, setIsLoggedin] = useState<boolean>(false)
