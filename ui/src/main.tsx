@@ -2,9 +2,24 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { AppContextProvider } from './utils/contexts.tsx'
+
+// date time
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault("Australia/Sydney");
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='en-au'>
+      <AppContextProvider>
+        <App />
+      </AppContextProvider>
+    </LocalizationProvider>
   </StrictMode>
 )

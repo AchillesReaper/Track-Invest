@@ -1,10 +1,12 @@
 // react components
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 import { AccountCircle, Logout } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import AddToPhotosIcon from '@mui/icons-material/AddToPhotos';
 import AccountSummary from './components/AccountSummary';
 import ChartPositionAllocation from './components/ChartPositionAllocation';
 import ChartPnL from './components/ChartPnL';
@@ -12,22 +14,27 @@ import DetailTables from './components/DetailTables';
 
 // local components
 import AuthLogin from './components/AuthLogin';
-import { auth, db } from './utils/firebaseConfig';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth } from './utils/firebaseConfig';
+import AddNewPortfolio from './components/AddNewPortfolio';
+import { AppContext } from './utils/contexts';
 
 // date time
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import AddNewPortfolio from './components/AddNewPortfolio';
-// import { auth } from './firebaseConfig';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault("Australia/Sydney");
 
+
+
 export default function App() {
-    const [isLoggedin , setIsLoggedin] = useState<boolean>(false)
-    const [isAddNewPortfolio , SetIsAddNewPortfolio] = useState<boolean >(false)
+    const [isLoggedin, setIsLoggedin] = useState<boolean>(false)
+    const [isAddNewPortfolio, SetIsAddNewPortfolio] = useState<boolean>(false)
+    const [portList, setPortList] = useState<string[] | undefined>(undefined)
+    const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
+
+    const appContext = useContext(AppContext);
 
     // 1. ---------- set up the drawer list ----------
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
@@ -44,11 +51,17 @@ export default function App() {
                 </Toolbar>
             </AppBar>
             <List>
-                <ListItem >
-                    
-
-                </ListItem>
-                <ListItemButton onClick={() => SetIsAddNewPortfolio(true)}> Add Portfolio </ListItemButton>
+                {portList && portList.map((port) => (
+                    <ListItemButton key={port} selected={selectedPortfolio === port} onClick={() => setSelectedPortfolio(port)}>
+                        <ListItemIcon> <AccountBalanceWalletIcon /> </ListItemIcon>
+                        <ListItemText primary={port} />
+                    </ListItemButton>
+                ))}
+                <Divider />
+                <ListItemButton onClick={() => SetIsAddNewPortfolio(true)}>
+                    <ListItemIcon> <AddToPhotosIcon /> </ListItemIcon>
+                    <ListItemText primary='Add Portfolio' />
+                </ListItemButton>
                 <Divider />
                 <ListItemButton onClick={() => handleLogOut()}>
                     <ListItemIcon> <Logout /> </ListItemIcon>
@@ -66,38 +79,15 @@ export default function App() {
         })
     }
 
+
+
     // ************ side effects ************
     useEffect(() => {
-        console.log(auth.currentUser?.email);
-        // any side effects can be added here
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            if (user) {
-                setIsLoggedin(true);
-                console.log(`User is signed in: ${user.email}`);
-                // check if user acc is set in the database
-                const userPathRef = doc(db, `/users/${user.email}`);
-                getDoc(userPathRef).then((userAcc) => {
-                    if (!userAcc.exists()) {
-                        console.log('No user account found, creating a new one...');
-                        setDoc(userPathRef, {
-                            email: user.email,
-                            createdAt: dayjs().tz().format(),
-                        }).then(() => {
-                            console.log('New user account created successfully');
-                        }).catch((error) => {
-                            console.error('Error creating user account:', error);
-                        });
-                    }
-                }).catch((error) => {
-                    console.error('Error fetching user account:', error);
-                });
-            } else {
-                setIsLoggedin(false);
-                console.log('No user is signed in');
-            }
-        });
-        return () => unsubscribe();
-    }, [auth])
+        if (!appContext) return;
+        setIsLoggedin(appContext.isLoggedin);
+        setPortList(appContext.portList);
+        setSelectedPortfolio(appContext.selectedPortfolio);
+    }, [appContext])
 
     return (
         <>
@@ -120,7 +110,7 @@ export default function App() {
                                     <MenuIcon />
                                 </IconButton>
                                 <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                                    Portfolio Name
+                                    {selectedPortfolio}
                                 </Typography>
                             </Toolbar>
                         </AppBar>
@@ -133,13 +123,12 @@ export default function App() {
                             <DetailTables />
                         </div>
                     </Box>
+                    <AddNewPortfolio open={isAddNewPortfolio} onClose={() => SetIsAddNewPortfolio(false)} />
                 </Box>
                 :
                 <AuthLogin />
             }
-            <AddNewPortfolio open={isAddNewPortfolio} onClose={() => SetIsAddNewPortfolio(false)} />
         </>
-
     )
 }
 
