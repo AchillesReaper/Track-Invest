@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Grid, Modal, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Button, Checkbox, FormControlLabel, Grid, Modal, TextField, Typography } from "@mui/material";
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
@@ -8,9 +8,10 @@ import { doc, setDoc } from "firebase/firestore";
 import dayjs from "dayjs";
 
 export default function AddNewPortfolio(props: { open: boolean, onClose: () => void, }) {
-    const [portfolioNmae, setPortfolioName] = useState<string>('new portfolio')
+    const [portfolioName, setPortfolioName] = useState<string>('')
     const [broker, setBroker] = useState<string>('')
     const [note, setNote] = useState<string>('')
+    const [isDefault, setIsDefault] = useState<boolean>(true)
 
     const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -18,11 +19,11 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
     function addNewPort() {
-        if (portfolioNmae === '') {
+        if (portfolioName === '') {
             setErrorMessage('Portfolio name is required');
             return;
         }
-        const newPortDocRef = doc(db, `users/${auth.currentUser!.email}/portfolios`, portfolioNmae);
+        const newPortDocRef = doc(db, `users/${auth.currentUser!.email}/portfolios`, portfolioName);
         setDoc(newPortDocRef, {
             broker: broker,
             note: note,
@@ -30,9 +31,23 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
             margin: 0,
             position_value: 0,
             net_worth: 0,
+            cashflow_count: 0,
+            transaction_count: 0,
+            mtm_time_stamp: dayjs().tz().valueOf(),
             created_at: dayjs().tz().format(),
         }).then(() => {
-            setSuccessMessage(`Portfolio ${portfolioNmae} created successfully`);
+            setSuccessMessage(`Portfolio ${portfolioName} created successfully`);
+            if (isDefault) {
+                // set this portfolio as default
+                const userDocRef = doc(db, `users/${auth.currentUser!.email}`);
+                setDoc(userDocRef, {
+                    default_portfolio: portfolioName,
+                }, { merge: true }).then(() => {
+                    setSuccessMessage(`Portfolio ${portfolioName} is set as default`);
+                }).catch((error) => {
+                    setErrorMessage(`set default: ${error.message}`);
+                });
+            }
         }).catch((error) => {
             setErrorMessage(`addNewPort: ${error.message}`);
         })
@@ -51,7 +66,8 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
                             <TextField
                                 fullWidth
                                 label="Portfolio Name"
-                                value={portfolioNmae}
+                                placeholder="e.g. My Portfolio"
+                                value={portfolioName}
                                 onChange={(e) => setPortfolioName(e.target.value)}
                             />
                         </Grid>
@@ -59,6 +75,7 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
                             <TextField
                                 fullWidth
                                 label="Broker Name"
+                                placeholder="e.g. Robinhood, E*TRADE"
                                 value={broker}
                                 onChange={(e) => setBroker(e.target.value)}
                             />
@@ -67,12 +84,21 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
                             <TextField
                                 fullWidth
                                 label="Note"
+                                placeholder="e.g. My main portfolio / Family Funds"
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
                             />
                         </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox checked={isDefault} onChange={()=>{setIsDefault(!isDefault)}} />
+                                }
+                                label="Set as Default?"
+                            />
+                        </Grid>
                         <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={addNewPort} >
-                            login
+                            add
                         </Button>
                     </Grid>
 
