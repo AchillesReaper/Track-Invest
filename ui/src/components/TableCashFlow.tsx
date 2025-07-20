@@ -53,6 +53,8 @@ export default function TbCashFlow() {
         const cfSumQuery = query(cfSumColRef, orderBy('__name__', 'desc'), limit(1));
         const unsubscribe = onSnapshot(cfSumQuery, (snapshot) => {
             if (snapshot.empty) {
+                setDisplayYear(undefined);
+                setTableRows([]);
                 console.log('No cashflow summary found');
                 return;
             }
@@ -82,7 +84,7 @@ export default function TbCashFlow() {
             setTableRows(newRows);
         })
         return () => unsubscribe();
-    }, []);
+    }, [appContext, appContext?.selectedPortPath]);
 
 
     return (
