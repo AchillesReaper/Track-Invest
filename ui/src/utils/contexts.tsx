@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import type { AppContextType } from "./dataInterface";
+import type { AppContextType, newportfolio } from "./dataInterface";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
@@ -10,14 +10,63 @@ export const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     let userDocUnsubscribe: (() => void) | null = null;
     let portfolioUnsubscribe: (() => void) | null = null;
+    let portfolioSummaryUnsubscribe: (() => void) | null = null;
 
-    const [isLoggedin, setIsLoggedin] = useState<boolean>(false)
+    const [isLoggedin, setIsLoggedin] = useState<boolean>(auth.currentUser !== null);
+
     const [portList, setPortList] = useState<string[] | undefined>(undefined)
     const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
     const [selectedPortPath, setSelectedPortPath] = useState<string | undefined>(undefined)
+
+    const [cashBalance, setCashBalance] = useState<number>(0);
+    const [marginBalance, setMarginBalance] = useState<number>(0);
+    const [positionValue, setPositionValue] = useState<number>(0);
+    const [netWorth, setNetWorth] = useState<number>(0);
+
     const [cashflowCount, setCashflowCount] = useState<number>(0)
     const [transactionCount, setTransactionCount] = useState<number>(0)
     const [mtmTime, setMtmTime] = useState<string | undefined>(undefined)
+
+    // Function to update selected portfolio and its data
+    const updateSelectedPortfolio = (portfolioId: string) => {
+        if (!auth.currentUser?.email || !portList?.includes(portfolioId)) {
+            console.warn('Invalid portfolio selection:', portfolioId);
+            return;
+        }
+
+        setSelectedPortfolio(portfolioId);
+        const newPortPath = `users/${auth.currentUser.email}/portfolios/${portfolioId}`;
+        setSelectedPortPath(newPortPath);
+
+        // Clean up previous portfolio summary listener
+        if (portfolioSummaryUnsubscribe) {
+            portfolioSummaryUnsubscribe();
+        }
+
+        // Set up listener for the new portfolio's summary data
+        const portfolioDocRef = doc(db, newPortPath);
+        portfolioSummaryUnsubscribe = onSnapshot(portfolioDocRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+                const portfolioData = docSnapshot.data() as newportfolio;
+                setSelectedPortfolio(portfolioId);
+                setSelectedPortPath(newPortPath);
+
+                setCashBalance(portfolioData.cash || 0);
+                setMarginBalance(portfolioData.margin || 0);
+                setPositionValue(portfolioData.position_value || 0);
+                setNetWorth(portfolioData.net_worth || 0);
+                setCashflowCount(portfolioData.cashflow_count || 0);
+                setTransactionCount(portfolioData.transaction_count || 0);
+                setMtmTime(portfolioData.mtm_time_stamp ? 
+                    dayjs(portfolioData.mtm_time_stamp).tz().format("YYYY-MM-DD HH:mm:ss z") : 
+                    undefined
+                );
+                console.log(`Portfolio ${portfolioId} data updated`);
+            }
+        }, (error) => {
+            console.error('Error listening to portfolio data:', error);
+        });
+    };
 
     useEffect(() => {
         const authUnsubscribe = onAuthStateChanged(auth, (user) => {
@@ -46,13 +95,22 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                             if (portList.length > 0) {
                                 setPortList(portList);
                                 console.log('Portfolios fetched:', portList);
-                                if (defaultPortID) {
-                                    setSelectedPortfolio(defaultPortID);
-                                    setSelectedPortPath(`users/${user.email}/portfolios/${defaultPortID}`);
+                                let selectedPortID = '';
+                                if (defaultPortID && portList.includes(defaultPortID)) {
+                                    selectedPortID = defaultPortID;
                                 } else {
-                                    setSelectedPortfolio(portList[0]); // Set the first portfolio as default if none is selected
-                                    setSelectedPortPath(`users/${user.email}/portfolios/${portList[0]}`);
+                                    selectedPortID = portList[0]; // Set the first portfolio as default if none is selected
                                 }
+                                setSelectedPortfolio(selectedPortID);
+                                setSelectedPortPath(`users/${user.email}/portfolios/${selectedPortID}`);
+                                const selectedPortSum: newportfolio = portfolios.docs.find(doc => doc.id === selectedPortID)!.data() as newportfolio;
+                                setCashBalance(selectedPortSum.cash);
+                                setMarginBalance(selectedPortSum.margin);
+                                setPositionValue(selectedPortSum.position_value);
+                                setNetWorth(selectedPortSum.net_worth);
+                                setCashflowCount(selectedPortSum.cashflow_count);
+                                setTransactionCount(selectedPortSum.transaction_count);
+                                setMtmTime(dayjs(selectedPortSum.mtm_time_stamp).tz().format("YYYY-MM-DD HH:mm:ss z"));
                             }
                         })
                     }
@@ -82,9 +140,14 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             portList: portList,
             selectedPortfolio: selectedPortfolio,
             selectedPortPath: selectedPortPath,
+            cashBalance: cashBalance,
+            marginBalance: marginBalance,
+            positionValue: positionValue,
+            netWorth: netWorth,
             cashflowCount: cashflowCount,
             transactionCount: transactionCount,
-            mtmTime: mtmTime
+            mtmTime: mtmTime,
+            updateSelectedPortfolio: updateSelectedPortfolio
         }}>
             {children}
         </AppContext.Provider>

@@ -20,12 +20,12 @@ import { AppContext } from './utils/contexts';
 
 
 export default function App() {
-    const [isLoggedin, setIsLoggedin] = useState<boolean>(false)
     const [isAddNewPortfolio, SetIsAddNewPortfolio] = useState<boolean>(false)
-    const [portList, setPortList] = useState<string[] | undefined>(undefined)
-    const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
 
     const appContext = useContext(AppContext);
+    const isLoggedin = appContext?.isLoggedin || false;
+    const portList = appContext?.portList;
+    const selectedPortfolio = appContext?.selectedPortfolio;
 
     // 1. ---------- set up the drawer list ----------
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
@@ -43,7 +43,11 @@ export default function App() {
             </AppBar>
             <List>
                 {portList && portList.map((port) => (
-                    <ListItemButton key={port} selected={selectedPortfolio === port} onClick={() => setSelectedPortfolio(port)}>
+                    <ListItemButton
+                        key={port}
+                        selected={selectedPortfolio === port}
+                        onClick={() => handlePortfolioSelect(port)}
+                    >
                         <ListItemIcon> <AccountBalanceWalletIcon /> </ListItemIcon>
                         <ListItemText primary={port} />
                     </ListItemButton>
@@ -70,15 +74,12 @@ export default function App() {
         })
     }
 
-
-
-    // ************ side effects ************
-    useEffect(() => {
-        if (!appContext) return;
-        setIsLoggedin(appContext.isLoggedin);
-        setPortList(appContext.portList);
-        setSelectedPortfolio(appContext.selectedPortfolio);
-    }, [appContext])
+    const handlePortfolioSelect = (portfolioId: string) => {
+        if (appContext?.updateSelectedPortfolio) {
+            appContext.updateSelectedPortfolio(portfolioId);
+            setDrawerOpen(false); // Close drawer on mobile after selection
+        }
+    };
 
     return (
         <>
