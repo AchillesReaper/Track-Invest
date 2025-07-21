@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import serviceAccount from './family-funds-f9628-firebase-adminsdk-fbsvc-a245153b34.json';
+import { serviceAccount } from './serviceAccount';
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount as admin.ServiceAccount)
