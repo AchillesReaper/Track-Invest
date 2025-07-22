@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 
 src/components/ZDummyDB.ts
+src/utils/firebaseConfigDetails.ts
