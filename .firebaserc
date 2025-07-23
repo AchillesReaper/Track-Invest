@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "family-funds-f9628"
-  }
+  },
+  "targets": {
+    "family-funds-f9628": {
+      "hosting": {
+        "track-invest": [
+          "track-invest"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
