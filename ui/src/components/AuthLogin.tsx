@@ -10,16 +10,14 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence, sendPasswordResetEmail, signInWithPopup, type UserCredential } from 'firebase/auth';
 import { auth, authGoogleProvider } from '../utils/firebaseConfig';
 
-import { Alert, AppBar, IconButton, Toolbar } from '@mui/material';
+import { AppBar, IconButton, Toolbar } from '@mui/material';
 import Divider from '@mui/material/Divider';
-import { type JSX } from 'react/jsx-runtime';
 import AuthSignUp from './AuthSignUp';
 import { LoadingBox, MessageBox } from './ZCommonComponents';
 
 
 
 export default function AuthLogin() {
-    const [resMessage, setResMessage] = useState<JSX.Element | undefined>(undefined)
     const [isSignUp, setIsSignUp] = useState<boolean>(false)
     const [isForgetPassword, setIsforgetPassword] = useState<boolean>(false)
 
@@ -45,6 +43,7 @@ export default function AuthLogin() {
         console.log('function login is called');
         setPersistence(auth, browserLocalPersistence).then(() => {
             signInWithEmailAndPassword(auth, login.email, login.password).then((result: UserCredential) => {
+                console.log(`${result.user.displayName} has logged in successfully`);
                 setInfoMessage('Login successful');
             }).catch((error) => {
                 console.log(error.message);
@@ -55,11 +54,11 @@ export default function AuthLogin() {
 
     function resetPassword() {
         if (login.email === '') {
-            setResMessage(<Alert severity="error">Please enter your email address</Alert>)
+            setErrorMessage('Please enter your email address');
             return
         } else {
             sendPasswordResetEmail(auth, login.email).then(() => {
-                setResMessage(<Alert severity="success">Password reset email has been sent to {login.email}</Alert>)
+                setSuccessMessage(`Password reset email has been sent to ${login.email}`);
             }).catch((error) => {
                 setErrorMessage(`authLogin: ${error.message}`) // Set error message for consistency
             })
@@ -69,7 +68,7 @@ export default function AuthLogin() {
     function loginWithGoogle() {
         console.log('login with google is called');
         signInWithPopup(auth, authGoogleProvider).then((result: UserCredential) => {
-            console.log('login success with google');
+            console.log(`${result.user.displayName} has logged in with Google successfully`);
             setInfoMessage('Login with Google successful');
         }).catch((error) => {
             console.log(error.message);
@@ -85,7 +84,7 @@ export default function AuthLogin() {
                     <IconButton color="inherit" sx={{ display: { md: 'none' } }} >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant='h6' component="div" sx={{ flexGrow: 1, color: 'inherit' }} onClick={() => { setIsforgetPassword(false); setIsSignUp(false); setResMessage(undefined) }}>
+                    <Typography variant='h6' component="div" sx={{ flexGrow: 1, color: 'inherit' }} onClick={() => { setIsforgetPassword(false); setIsSignUp(false); }}>
                         Track Invest
                     </Typography>
                 </Toolbar>
@@ -150,10 +149,10 @@ export default function AuthLogin() {
                                 <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={handleLogin} >
                                     login
                                 </Button>
-                                <Button variant='outlined' sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={() => { setIsSignUp(true); setResMessage(undefined) }}>
+                                <Button variant='outlined' sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={() => { setIsSignUp(true); }}>
                                     sign up
                                 </Button>
-                                <Button variant='outlined' sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={() => { setIsforgetPassword(true); setResMessage(undefined) }}>
+                                <Button variant='outlined' sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={() => { setIsforgetPassword(true); }}>
                                     forget password
                                 </Button>
                             </Box>

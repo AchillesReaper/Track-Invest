@@ -1,5 +1,5 @@
 // react components
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 
 // thrid party libraries
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';

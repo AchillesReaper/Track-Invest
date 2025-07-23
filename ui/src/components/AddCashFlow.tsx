@@ -7,7 +7,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 
 import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
-import { auth, db } from '../utils/firebaseConfig';
+import { db } from '../utils/firebaseConfig';
 import type { Cashflow } from "../utils/dataInterface";
 import { doc, setDoc } from "firebase/firestore";
 
@@ -53,7 +53,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
             created_at: dayjs().tz().format(),
         };
         setDoc(cfSumDocRef, {[cfID]: newCashFlow}, { merge: true }).then(() => {
-            const portSumDocRef = doc(db, appContext.selectedPortPath);
+            const portSumDocRef = doc(db, appContext.selectedPortPath!);
             setDoc(portSumDocRef, {
                 cashflow_count: newIdCount,
                 cash: newCashFlow.bal_after,

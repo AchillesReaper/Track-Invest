@@ -2,7 +2,7 @@ import { createContext, useEffect, useState } from "react";
 import type { AppContextType, newportfolio } from "./dataInterface";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import dayjs from "dayjs";
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -26,6 +26,32 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [cashflowCount, setCashflowCount] = useState<number>(0)
     const [transactionCount, setTransactionCount] = useState<number>(0)
     const [mtmTime, setMtmTime] = useState<string | undefined>(undefined)
+
+    // check if stock list is in local storage if not getdoc from firebase
+    const [stockList, setStockList] = useState<{ [ticker: string]: { fullExchangeName: string, longName: string } } | undefined>(undefined);
+    useEffect(() => {
+        const storedStockList = localStorage.getItem('stockList');
+        if (storedStockList) {
+            setStockList(JSON.parse(storedStockList));
+        } else {
+            // Fetch from Firebase if not in local storage
+            const stockListRef = doc(db, 'stock_list/us');
+            getDoc(stockListRef).then((docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const data = docSnapshot.data();
+                    console.log(data);
+                    if (data) {
+                        setStockList(data as { [ticker: string]: { fullExchangeName: string, longName: string } });
+                        localStorage.setItem('stockList', JSON.stringify(data));
+                    }
+                } else {
+                    console.warn('No stock list found in Firebase');
+                }
+            }).catch((error) => {
+                console.error('Error fetching stock list from Firebase:', error);
+            });
+        }
+    }, []);
 
     // Function to update selected portfolio and its data
     const updateSelectedPortfolio = (portfolioId: string) => {
@@ -57,8 +83,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                 setNetWorth(portfolioData.net_worth || 0);
                 setCashflowCount(portfolioData.cashflow_count || 0);
                 setTransactionCount(portfolioData.transaction_count || 0);
-                setMtmTime(portfolioData.mtm_time_stamp ? 
-                    dayjs(portfolioData.mtm_time_stamp).tz().format("YYYY-MM-DD HH:mm:ss z") : 
+                setMtmTime(portfolioData.mtm_time_stamp ?
+                    dayjs(portfolioData.mtm_time_stamp).tz().format("YYYY-MM-DD HH:mm:ss z") :
                     undefined
                 );
                 console.log(`Portfolio ${portfolioId} data updated`);
@@ -147,6 +173,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             cashflowCount: cashflowCount,
             transactionCount: transactionCount,
             mtmTime: mtmTime,
+            stockList: stockList,
             updateSelectedPortfolio: updateSelectedPortfolio
         }}>
             {children}

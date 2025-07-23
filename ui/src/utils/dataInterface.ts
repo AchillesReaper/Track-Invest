@@ -1,18 +1,25 @@
 // ******************** app context ****************
 export interface AppContextType {
-    isLoggedin: boolean;
-    portList: string[] | undefined;
-    selectedPortfolio: string | undefined;
-    selectedPortPath: string | undefined;
-    cashBalance: number;
-    marginBalance: number;
-    positionValue: number;
-    netWorth: number;
-    cashflowCount: number;
-    transactionCount: number;
-    mtmTime: string | undefined;
+    isLoggedin: boolean,
+    portList: string[] | undefined,
+    selectedPortfolio: string | undefined,
+    selectedPortPath: string | undefined,
+    cashBalance: number,
+    marginBalance: number,
+    positionValue: number,
+    netWorth: number,
+    cashflowCount: number,
+    transactionCount: number,
+    mtmTime: string | undefined,
+    // stock list should be store in the local storage
+    stockList?: {
+        [ticker: string]: {
+            'fullExchangeName': string,
+            'longName': string,
+        }
+    } | undefined,
     // Add the function to update selected portfolio
-    updateSelectedPortfolio: (portfolioId: string) => void;
+    updateSelectedPortfolio: (portfolioId: string) => void,
 }
 
 // **************** portfolio ****************
@@ -43,7 +50,7 @@ export interface Cashflow {
 }
 
 export interface GridCashflowRowEntry {
-    id:string,
+    id: string,
     date: string,
     type: 'in' | 'out',
     amount: number,
@@ -64,16 +71,32 @@ export interface Transaction {
     type: 'buy' | 'sell',
     time_stamp: number,
     time: string,
+    commission: number,
+    other_fees: number,
+    note?: string,
+    created_at?: string,
+}
+
+export interface GridTransactionRowEntry {
+    date: string,
+    id: string,  // Unique identifier for each row -> same as ticker
+    amount: number,
+    price: number,
+    
+    marketPrice: number,
+    marketValue: number,
+    pnl: number,
+    pnlPct: string, // Percentage formatted as a string
 }
 
 
 // **************** position ****************
 export interface GridPositionRowEntry {
-    id: string;  // Unique identifier for each row -> same as ticker
-    cost: number;
-    amount: number;
-    marketPrice: number;
-    marketValue: number;
-    pnl: number;
-    pnlPct: string; // Percentage formatted as a string
+    id: string,  // Unique identifier for each row -> same as ticker
+    cost: number,
+    amount: number,
+    marketPrice: number,
+    marketValue: number,
+    pnl: number,
+    pnlPct: string, // Percentage formatted as a string
 }

@@ -1,12 +1,13 @@
 import { DataGrid, Toolbar, type GridColDef } from "@mui/x-data-grid";
 import { useContext, useEffect, useState } from "react";
-import type { GridCashflowRowEntry } from "../utils/dataInterface";
+
 import AddIcon from '@mui/icons-material/Add';
 import { Button, Typography } from "@mui/material";
 import AddCashFlow from "./AddCashFlow";
 import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../utils/firebaseConfig";
 import { AppContext } from "../utils/contexts";
+import type { GridCashflowRowEntry } from "../utils/dataInterface";
 
 
 export default function TbCashFlow() {
