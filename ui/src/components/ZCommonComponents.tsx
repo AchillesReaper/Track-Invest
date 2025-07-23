@@ -45,7 +45,11 @@ export const styleMainColBox = {
 
 export function LoadingBox(props: { open: boolean, onClose: () => void }) {
     return (
-        <Modal open={props.open} onClose={props.onClose}>
+        <Modal open={props.open} onClose={props.onClose}
+            hideBackdrop={true}
+            disableEnforceFocus={true}
+            disableAutoFocus={true}
+        >
             <Box sx={{
                 position: 'absolute' as 'absolute',
                 top: '50%',

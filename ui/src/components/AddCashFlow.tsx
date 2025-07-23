@@ -8,7 +8,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
 import { db } from '../utils/firebaseConfig';
-import type { Cashflow } from "../utils/dataInterface";
+import type { CashflowEntry } from "../utils/dataInterface";
 import { doc, setDoc } from "firebase/firestore";
 
 // date time
@@ -32,6 +32,11 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     const [selectedReason, setSelectedReason] = useState<'cash in' | 'sell' | 'buy' | 'cash out' | 'other'>('cash in');
     const [note, setNote] = useState<string>('');
 
+    const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
+    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+    const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
+    const [isLoading, setIsLoading] = useState<boolean>(false)
+
     function addCashFlow() {
         // add a new cash flow entry in collection `cashflow`; -> no need!!
         // add a new field in `cashflow_summary` in the corresponding year
@@ -41,7 +46,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         const cfID = `cf_${newIdCount.toString().padStart(6, '0')}`;
         const cfYear = dayjs(cTime).tz().format('YYYY');
         const cfSumDocRef = doc(db, `${appContext.selectedPortPath}/cashflow_summary/${cfYear}`);
-        const newCashFlow: Cashflow = {
+        const newCashFlow: CashflowEntry = {
             date: dayjs(cTime).tz().format('YYYY-MM-DD'),
             type: selectedType,
             amount: amount,
@@ -66,11 +71,6 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         })
 
     }
-
-    const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
-    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
-    const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
-    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     return (
         <Modal open={props.open} onClose={props.onClose}>

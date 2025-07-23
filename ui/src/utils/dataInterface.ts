@@ -37,7 +37,7 @@ export interface newportfolio {
 }
 
 // **************** cashflow ****************
-export interface Cashflow {
+export interface CashflowEntry {
     date: string,
     type: 'in' | 'out',
     amount: number,
@@ -64,7 +64,7 @@ export interface GridCashflowRowEntry {
 
 
 // **************** transaction ****************
-export interface Transaction {
+export interface TransactionEntry {
     ticker: string,
     amount: number,
     price: number,
@@ -73,6 +73,7 @@ export interface Transaction {
     time: string,
     commission: number,
     other_fees: number,
+    total_cost: number,
     note?: string,
     created_at?: string,
 }
@@ -91,6 +92,23 @@ export interface GridTransactionRowEntry {
 
 
 // **************** position ****************
+// portfolio/positionSummary/
+//     |- current
+//     /- historical
+//        |- 2023
+//        |- 2024
+export interface SinglePosition {
+    ticker: string,
+    amount: number,
+    avg_cost: number,
+    total_cost: number,
+    marketPrice: number,
+    marketValue: number,
+    pnl: number,
+    pnlPct: string, // Percentage formatted as a string
+}
+
+
 export interface GridPositionRowEntry {
     id: string,  // Unique identifier for each row -> same as ticker
     cost: number,
