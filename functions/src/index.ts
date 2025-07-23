@@ -8,6 +8,8 @@ import yahooFinance from 'yahoo-finance2';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import {auth} from './firebaseConfig';
+import { authenticateUser } from "./middleware";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -19,7 +21,7 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 app.use((req, res, next) => {
-    console.log("");
+    console.log(`${auth}`);
     console.log(`******************** Server time: ${dayjs().tz().format('hh:mm A, DD MMM YYYY, UTCZ')} ********************`);
     console.log(`******************** endpoint: ${req.path} ********************`);
     console.log('req.headers: \n', req.headers);
@@ -35,7 +37,7 @@ app.get('/', (req, res) => {
 
 
 // Endpoint to get the close price of a stock for a specific date
-app.post('/close-price', async (req, res) => {
+app.post('/close-price', authenticateUser, async (req, res) => {
     try {
         const ticker = req.body.ticker;
         const date = req.body.date;
@@ -57,7 +59,7 @@ app.post('/close-price', async (req, res) => {
                 error: 'No historical data found for this symbol'
             });
         } else {
-            console.log(historical);
+            // console.log(historical);
 
             return res.status(200).json({
                 success: true,
@@ -75,4 +77,8 @@ app.post('/close-price', async (req, res) => {
     }
 });
 
-exports.app = onRequest(app);
+// Configure the function to allow unauthenticated access
+exports.app = onRequest({
+  cors: true,
+  invoker: "public"
+}, app);
