@@ -4,16 +4,8 @@ export interface AppContextType {
     portList: string[] | undefined,
     selectedPortfolio: string | undefined,
     selectedPortPath: string | undefined,
-    cashBalance: number,
-    marginBalance: number,
-    positionValue: number,
-    netWorth: number,
-    cashflowCount: number,
-    transactionCount: number,
-    mtmTime: string | undefined,
-    currentPositions?: { [ticker: string]: SinglePosition } 
     // stock list should be store in the local storage
-    stockList?: {
+    stockList: {
         [ticker: string]: {
             'fullExchangeName': string,
             'longName': string,
@@ -21,6 +13,19 @@ export interface AppContextType {
     } | undefined,
     // Add the function to update selected portfolio
     updateSelectedPortfolio: (portfolioId: string) => void,
+}
+
+export interface PortfolioContextType {
+    selectedPortfolio: string | undefined,
+    selectedPortPath: string | undefined,
+    cashBalance: number,
+    marginBalance: number,
+    positionValue: number,
+    netWorth: number,
+    cashflowCount: number,
+    transactionCount: number,
+    mtmTime: string | undefined,
+    currentPositions: { [ticker: string]: SinglePosition } | undefined,
 }
 
 // **************** portfolio ****************
@@ -84,7 +89,7 @@ export interface GridTransactionRowEntry {
     id: string,  // Unique identifier for each row -> same as ticker
     amount: number,
     price: number,
-    
+
     marketPrice: number,
     marketValue: number,
     pnl: number,
