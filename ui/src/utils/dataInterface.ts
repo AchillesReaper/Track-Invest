@@ -40,12 +40,12 @@ export interface CashflowEntry {
     date: string,
     type: 'in' | 'out',
     amount: number,
-    bal_prev: number,
-    bal_after: number,
-    reason: 'cash in' | 'sell' | 'buy' | 'cash out' | 'other',
-    time_stamp: number,
+    balPrev: number,
+    balAfter: number,
+    reason: string,     //'cash in' | 'sell' | 'buy' | 'cash out' | 'other',
+    timeStamp: number,
     note?: string,
-    created_at?: string,
+    createdAt?: string,
 }
 
 export interface GridCashflowRowEntry {

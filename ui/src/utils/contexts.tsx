@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import type { AppContextType, NewPortfolio, PortfolioContextType, SinglePosition } from "./dataInterface";
+import type { AppContextType, PortfolioContextType, SinglePosition } from "./dataInterface";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
@@ -127,8 +127,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     );
 }
 
-export const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
+export const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
 export const PortfolioContextProvider = ({ children }: { children: React.ReactNode }) => {
     const appContext = useContext(AppContext);
@@ -185,10 +185,10 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
                     setMarginBalance(data.marginBalance);
                     setPositionValue(data.positionValue);
                     setNetWorth(data.netWorth);
-                    setCashflowCount(data.cashflowCount);
-                    setTransactionCount(data.transactionCount);
-                    setMtmTime(data.mtmTimeStamp);
-                    setCurrentPositions(data.currentPositions);
+                    setCashflowCount(data.cashflowCount || 0);
+                    setTransactionCount(data.transactionCount || 0);
+                    setMtmTime(data.mtmTimeStamp || 0);
+                    setCurrentPositions(data.currentPositions || {});
                     console.log(`Portfolio summary for ${appContext.selectedPortfolio} updated`);
                 } else {
                     console.log(`No portfolio summary found for ${appContext.selectedPortfolio}`);
