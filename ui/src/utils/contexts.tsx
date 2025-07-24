@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import type { AppContextType, newportfolio, PortfolioContextType, SinglePosition } from "./dataInterface";
+import type { AppContextType, NewPortfolio, PortfolioContextType, SinglePosition } from "./dataInterface";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
@@ -143,7 +143,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
     const [netWorth, setNetWorth] = useState<number>(0);
     const [cashflowCount, setCashflowCount] = useState<number>(0);
     const [transactionCount, setTransactionCount] = useState<number>(0);
-    const [mtmTime, setMtmTime] = useState<string | undefined>(undefined);
+    const [mtmTime, setMtmTime] = useState<number>(dayjs().valueOf());
     const [currentPositions, setCurrentPositions] = useState<{ [ticker: string]: SinglePosition } | undefined>(undefined);
 
     useEffect(() => {
@@ -167,7 +167,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             setNetWorth(0);
             setCashflowCount(0);
             setTransactionCount(0);
-            setMtmTime(undefined);
+            setMtmTime(dayjs().valueOf());
             setCurrentPositions(undefined);
             return;
         }
@@ -177,42 +177,22 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
 
         try {
             // Set up listener for portfolio summary data
-            const portfolioDocRef = doc(db, portfolioPath);
-            portfolioSummaryUnsubscribe.current = onSnapshot(portfolioDocRef, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const portfolioData = docSnapshot.data() as newportfolio;
-
-                    setCashBalance(portfolioData.cash || 0);
-                    setMarginBalance(portfolioData.margin || 0);
-                    setPositionValue(portfolioData.position_value || 0);
-                    setNetWorth(portfolioData.net_worth || 0);
-                    setCashflowCount(portfolioData.cashflow_count || 0);
-                    setTransactionCount(portfolioData.transaction_count || 0);
-                    setMtmTime(portfolioData.mtm_time_stamp ?
-                        dayjs(portfolioData.mtm_time_stamp).tz().format("YYYY-MM-DD HH:mm:ss z") :
-                        undefined
-                    );
-                    console.log(`Portfolio ${appContext.selectedPortfolio} data updated`);
+            const portfolioSummaryDocRef = doc(db, `${portfolioPath}/portfolio_summary/current`);
+            portfolioSummaryUnsubscribe.current = onSnapshot(portfolioSummaryDocRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data() as PortfolioContextType;
+                    setCashBalance(data.cashBalance);
+                    setMarginBalance(data.marginBalance);
+                    setPositionValue(data.positionValue);
+                    setNetWorth(data.netWorth);
+                    setCashflowCount(data.cashflowCount);
+                    setTransactionCount(data.transactionCount);
+                    setMtmTime(data.mtmTimeStamp);
+                    setCurrentPositions(data.currentPositions);
+                    console.log(`Portfolio summary for ${appContext.selectedPortfolio} updated`);
                 } else {
-                    console.log(`Portfolio document does not exist: ${portfolioPath}`);
+                    console.log(`No portfolio summary found for ${appContext.selectedPortfolio}`);
                 }
-            }, (error) => {
-                console.error('Error listening to portfolio data:', error);
-            });
-
-            // Set up listener for current positions
-            const positionCurrentDocRef = doc(db, `${portfolioPath}/position_summary/current`);
-            positionCurrentUnsubscribe.current = onSnapshot(positionCurrentDocRef, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const positionData = docSnapshot.data() as { [ticker: string]: SinglePosition };
-                    setCurrentPositions(positionData);
-                    console.log(`Position data for portfolio ${appContext.selectedPortfolio} updated`);
-                } else {
-                    setCurrentPositions(undefined);
-                    console.log(`No current positions found for portfolio ${appContext.selectedPortfolio}`);
-                }
-            }, (error) => {
-                console.error('Error listening to position data:', error);
             });
 
         } catch (error) {
@@ -234,16 +214,16 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
 
     return (
         <PortfolioContext.Provider value={{
-            selectedPortfolio,
-            selectedPortPath,
-            cashBalance,
-            marginBalance,
-            positionValue,
-            netWorth,
-            cashflowCount,
-            transactionCount,
-            mtmTime,
-            currentPositions
+            selectedPortfolio: selectedPortfolio,
+            selectedPortPath: selectedPortPath,
+            cashBalance: cashBalance,
+            marginBalance: marginBalance,
+            positionValue: positionValue,
+            netWorth: netWorth,
+            cashflowCount: cashflowCount,
+            transactionCount: transactionCount,
+            mtmTimeStamp: mtmTime,
+            currentPositions: currentPositions
         }}>
             {children}
         </PortfolioContext.Provider>

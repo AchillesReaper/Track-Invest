@@ -16,29 +16,22 @@ export interface AppContextType {
 }
 
 export interface PortfolioContextType {
-    selectedPortfolio: string | undefined,
-    selectedPortPath: string | undefined,
+    selectedPortfolio?: string | undefined,
+    selectedPortPath?: string | undefined,
     cashBalance: number,
     marginBalance: number,
     positionValue: number,
     netWorth: number,
     cashflowCount: number,
     transactionCount: number,
-    mtmTime: string | undefined,
+    mtmTimeStamp: number,
     currentPositions: { [ticker: string]: SinglePosition } | undefined,
 }
 
 // **************** portfolio ****************
-export interface newportfolio {
+export interface NewPortfolio {
     broker: string,
     note: string,
-    cash: number,
-    margin: number,
-    position_value: number,
-    net_worth: number,
-    cashflow_count: number,
-    transaction_count: number,
-    mtm_time_stamp: number,
     created_at: string,
 }
 
