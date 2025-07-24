@@ -1,19 +1,19 @@
 import { useContext, useEffect, useState } from "react";
-import { AppContext } from "../utils/contexts";
+import { PortfolioContext } from "../utils/contexts";
 
 export default function AccountSummary() {
-    const appContext = useContext(AppContext);
+    const portfolioContext = useContext(PortfolioContext);
     const [accSummary, setAccSummary] = useState<{ [key: string]: number } | undefined>(undefined)
 
     useEffect(() => {
-        if (!appContext) return;
+        if (!portfolioContext) return;
         setAccSummary({
-            'Cash Balance': appContext.cashBalance,
-            'Margin Balance': appContext.marginBalance,
-            'Position Value': appContext.positionValue,
-            'Net Worth': appContext.netWorth,
+            'Cash Balance': portfolioContext.cashBalance,
+            'Margin Balance': portfolioContext.marginBalance,
+            'Position Value': portfolioContext.positionValue,
+            'Net Worth': portfolioContext.netWorth,
         })
-    }, [appContext]);
+    }, [portfolioContext]);
     return (
         <div className="mainRow1">
             {accSummary && Object.entries(accSummary).map(([k, v]) =>
