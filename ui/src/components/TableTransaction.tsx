@@ -2,8 +2,10 @@ import { useContext, useEffect, useState } from "react";
 import { AppContext, PortfolioContext } from "../utils/contexts";
 import type { GridTransactionRowEntry, TransactionEntry } from "../utils/dataInterface";
 import { DataGrid, Toolbar, type GridColDef } from "@mui/x-data-grid";
-import { Button, Typography } from "@mui/material";
+import { Box, Button, ButtonGroup, IconButton, Typography } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import AddTransaction from "./AddTransaction";
 import dayjs from "dayjs";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -31,9 +33,18 @@ export default function TbTransaction() {
     function CustomToolbar() {
         return (
             <Toolbar>
-                <Typography variant="caption" component="div" sx={{ flexGrow: 1 }}>
-                    {`Transactions in ${displayMonth}`}
-                </Typography>
+                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+                    <ButtonGroup variant="text" size="small">
+                        <IconButton size="small" onClick={() => handleMonthChange('prev')}>
+                            <KeyboardDoubleArrowLeftIcon fontSize="inherit" />
+                        </IconButton>
+                        <Button disabled>{displayMonth}</Button>
+                        <IconButton size="small" onClick={() => handleMonthChange('next')} >
+                            <KeyboardDoubleArrowRightIcon fontSize="inherit" />
+                        </IconButton>
+                    </ButtonGroup>
+
+                </Box>
 
                 <Button color="primary" startIcon={<AddIcon />} onClick={() => setOpenAddTsc(true)}>
                     add transaction
@@ -42,8 +53,21 @@ export default function TbTransaction() {
         )
     }
 
+    function handleMonthChange(direction: 'prev' | 'next') {
+        switch (direction) {
+            case 'prev':
+                setDisplayMonth(dayjs(displayMonth).subtract(1, 'month').format('YYYY-MM'));
+                break;
+            case 'next':
+                setDisplayMonth(dayjs(displayMonth).add(1, 'month').format('YYYY-MM'));
+                break;
+            default:
+                break;
+        }
+    }
+
     useEffect(() => {
-        if (!portfolioContext || !portfolioContext.selectedPortPath) {return; }
+        if (!portfolioContext || !portfolioContext.selectedPortPath) { return; }
         const txDocRef = doc(db, `${portfolioContext.selectedPortPath}/transactions/${displayMonth}`);
 
         const unsubscribe = onSnapshot(txDocRef, (txSummary) => {
@@ -72,7 +96,7 @@ export default function TbTransaction() {
         });
 
         return () => unsubscribe();
-    }, [portfolioContext, portfolioContext?.selectedPortPath]);
+    }, [portfolioContext, portfolioContext?.selectedPortPath, displayMonth]);
 
     return (
         <div>

@@ -93,9 +93,12 @@ export interface GridTransactionRowEntry {
 // **************** position ****************
 // portfolio/positionSummary/
 //     |- current
-//     /- historical
-//        |- 2023
-//        |- 2024
+//     |- 2023
+//         |- 2023-01
+//         |- 2023-02
+//         |- 2023-03
+//         |- ...
+//     |- 2024
 export interface SinglePosition {
     ticker: string,
     amount: number,
@@ -110,7 +113,8 @@ export interface SinglePosition {
 
 export interface GridPositionRowEntry {
     id: string,  // Unique identifier for each row -> same as ticker
-    cost: number,
+    avgCost: number,
+    totalCost: number,
     amount: number,
     marketPrice: number,
     marketValue: number,
