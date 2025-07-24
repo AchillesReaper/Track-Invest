@@ -96,13 +96,13 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             amount: amount,
             price: price,
             type: selectedType,
-            time_stamp: tTime,
+            timeStamp: tTime,
             time: dayjs(tTime).tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
             commission: commission,
-            other_fees: otherFees,
-            total_cost: totalCF,
+            otherFees: otherFees,
+            totalCost: totalCF,
             note: note,
-            created_at: dayjs().tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
+            createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
         }
         setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true }).then(() => {
             console.log(`Transaction added: ${newOrderId} - ${selectedTicker} x ${amount}`);
@@ -118,12 +118,12 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             // update the existing position
             const currentTickerPosition: SinglePosition = portfolioContext.currentPositions![selectedTicker];
             const updatedAmount = currentTickerPosition.amount + amount;
-            const updatedAvgCost = (currentTickerPosition.total_cost + totalCF) / updatedAmount;
+            const updatedAvgCost = (currentTickerPosition.totalCost + totalCF) / updatedAmount;
             updatedPosition = {
                 ...currentTickerPosition,
                 amount: updatedAmount,
-                avg_cost: updatedAvgCost,
-                total_cost: updatedAmount * updatedAvgCost,
+                avgCost: updatedAvgCost,
+                totalCost: updatedAmount * updatedAvgCost,
                 marketPrice: price,
                 marketValue: updatedAmount * price,
                 pnl: (price - updatedAvgCost) * updatedAmount,
@@ -134,8 +134,8 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             updatedPosition = {
                 ticker: selectedTicker,
                 amount: amount,
-                avg_cost: price,
-                total_cost: totalCF,
+                avgCost: price,
+                totalCost: totalCF,
                 marketPrice: price,
                 marketValue: amount * price,
                 pnl: 0, // no PnL for new position
@@ -186,13 +186,13 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             amount: amount,
             price: price,
             type: selectedType,
-            time_stamp: tTime,
+            timeStamp: tTime,
             time: dayjs(tTime).tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
             commission: commission,
-            other_fees: otherFees,
-            total_cost: totalCF,
+            otherFees: otherFees,
+            totalCost: totalCF,
             note: note,
-            created_at: dayjs().tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
+            createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
         };
         setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true }).then(() => {
             console.log(`Transaction added: ${newOrderId} : ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
@@ -233,11 +233,11 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         const updatedTickerPosition: SinglePosition = {
             ...currentTickerPosition,
             amount: updatedAmount,
-            total_cost: currentTickerPosition.avg_cost * updatedAmount,
+            totalCost: currentTickerPosition.avgCost * updatedAmount,
             marketPrice: price,
             marketValue: updatedAmount * price,
-            pnl: (price - currentTickerPosition.avg_cost) * updatedAmount,
-            pnlPct: ((price / currentTickerPosition.avg_cost - 1) * 100).toFixed(2) + '%',
+            pnl: (price - currentTickerPosition.avgCost) * updatedAmount,
+            pnlPct: ((price / currentTickerPosition.avgCost  - 1) * 100).toFixed(2) + '%',
         }
         const updatedPortPositions = portfolioContext.currentPositions!
         if (updatedAmount <= 0) {
@@ -280,8 +280,8 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             const mktPrice = mktPriceList[ticker];
             updatedPortPositions[ticker].marketPrice = mktPrice;
             updatedPortPositions[ticker].marketValue = mktPrice * updatedPortPositions[ticker].amount;
-            updatedPortPositions[ticker].pnl = (mktPrice - updatedPortPositions[ticker].avg_cost) * updatedPortPositions[ticker].amount;
-            updatedPortPositions[ticker].pnlPct = ((mktPrice / updatedPortPositions[ticker].avg_cost - 1) * 100).toFixed(2) + '%
+            updatedPortPositions[ticker].pnl = (mktPrice - updatedPortPositions[ticker].avgCost) * updatedPortPositions[ticker].amount;
+            updatedPortPositions[ticker].pnlPct = ((mktPrice / updatedPortPositions[ticker].avgCost - 1) * 100).toFixed(2) + '%'
         }
         const updatedPositionValue = Object.values(updatedPortPositions).reduce((acc, pos) => acc + pos.marketValue, 0);
         const updatedNetWorth = portfolioContext.cashBalance + updatedPositionValue;

@@ -68,25 +68,25 @@ export interface TransactionEntry {
     amount: number,
     price: number,
     type: 'buy' | 'sell',
-    time_stamp: number,
+    timeStamp: number,
     time: string,
     commission: number,
-    other_fees: number,
-    total_cost: number,
+    otherFees: number,
+    totalCost: number,
     note?: string,
-    created_at?: string,
+    createdAt?: string,
 }
 
 export interface GridTransactionRowEntry {
+    id: string,  // tx_xxxxxx
     date: string,
-    id: string,  // Unique identifier for each row -> same as ticker
+    type: 'buy' | 'sell',
+    ticker: string,
     amount: number,
     price: number,
-
-    marketPrice: number,
-    marketValue: number,
-    pnl: number,
-    pnlPct: string, // Percentage formatted as a string
+    commission: number,
+    otherFees: number,
+    totalCost: number,
 }
 
 
@@ -99,8 +99,8 @@ export interface GridTransactionRowEntry {
 export interface SinglePosition {
     ticker: string,
     amount: number,
-    avg_cost: number,
-    total_cost: number,
+    avgCost: number,
+    totalCost: number,
     marketPrice: number,
     marketValue: number,
     pnl: number,
