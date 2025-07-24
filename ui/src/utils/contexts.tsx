@@ -187,6 +187,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             transactionCount: transactionCount,
             mtmTime: mtmTime,
             stockList: stockList,
+            currentPositions: positionCurrent,
             updateSelectedPortfolio: updateSelectedPortfolio
         }}>
             {children}
