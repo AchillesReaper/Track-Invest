@@ -6,12 +6,12 @@ import { Button, Typography } from "@mui/material";
 import AddCashFlow from "./AddCashFlow";
 import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../utils/firebaseConfig";
-import { AppContext } from "../utils/contexts";
+import { PortfolioContext } from "../utils/contexts";
 import type { GridCashflowRowEntry } from "../utils/dataInterface";
 
 
 export default function TbCashFlow() {
-    const appContext = useContext(AppContext);
+    const portfolioContext = useContext(PortfolioContext);
     const [openAddCF, setOpenAddCF] = useState<boolean>(false)
     const [displayYear, setDisplayYear] = useState<number | undefined>(undefined)
 
@@ -48,8 +48,8 @@ export default function TbCashFlow() {
     }
 
     useEffect(() => {
-        if (!appContext || !appContext.selectedPortPath) return;
-        const cfSumColRef = collection(db, `${appContext.selectedPortPath}/cashflow_summary`);
+        if (!portfolioContext || !portfolioContext.selectedPortPath) return;
+        const cfSumColRef = collection(db, `${portfolioContext.selectedPortPath}/cashflow_summary`);
         // find the biggest doc id in the collection
         const cfSumQuery = query(cfSumColRef, orderBy('__name__', 'desc'), limit(1));
         const unsubscribe = onSnapshot(cfSumQuery, (snapshot) => {
@@ -85,7 +85,7 @@ export default function TbCashFlow() {
             setTableRows(newRows);
         })
         return () => unsubscribe();
-    }, [appContext, appContext?.selectedPortPath]);
+    }, [portfolioContext, portfolioContext?.selectedPortPath]);
 
 
     return (

@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { AppContextProvider } from './utils/contexts.tsx'
+import { AppContextProvider, PortfolioContextProvider } from './utils/contexts.tsx'
 
 // date time
 import { LocalizationProvider } from '@mui/x-date-pickers';
@@ -19,7 +19,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='en-au'>
       <AppContextProvider>
-        <App />
+        <PortfolioContextProvider>
+          <App />
+        </PortfolioContextProvider>
       </AppContextProvider>
     </LocalizationProvider>
   </StrictMode>

@@ -47,6 +47,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
     // Function to update selected portfolio and its data
     const updateSelectedPortfolio = (portfolioId: string) => {
+        console.log(`Updating selected portfolio to ${portfolioId} ...`);
         if (!auth.currentUser?.email || !portList?.includes(portfolioId)) {
             console.warn('Invalid portfolio selection:', portfolioId);
             return;

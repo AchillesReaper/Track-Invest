@@ -1,5 +1,5 @@
 
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { Avatar, Box, Button, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
 import CurrencyExchangeOutlinedIcon from '@mui/icons-material/CurrencyExchangeOutlined';
@@ -15,21 +15,22 @@ import { doc, setDoc } from "firebase/firestore";
 import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import { AppContext } from "../utils/contexts";
+import { PortfolioContext } from "../utils/contexts";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault("Australia/Sydney");
 
 // add cash flow entry and monthly cashflow summary
 export default function AddCashFlow(props: { open: boolean, onClose: () => void, }) {
-    const appContext = useContext(AppContext);
+    const portfolioContext = useContext(PortfolioContext);
 
     const [cTime, setCTime] = useState<number>(dayjs().valueOf())
     const typeOptions = ['in', 'out'];
     const [selectedType, setSelectedType] = useState<'in' | 'out'>('in');
     const [amount, setAmount] = useState<number>(0);
-    const reasonOptions = ['cash in', 'sell', 'buy', 'cash out', 'other'];
-    const [selectedReason, setSelectedReason] = useState<'cash in' | 'sell' | 'buy' | 'cash out' | 'other'>('cash in');
+    // const reasonOptions = ['cash in', 'sell', 'buy', 'cash out', 'other'];
+    const [reasonOptions, setReasonOptions] = useState<string[] >([]);
+    const [selectedReason, setSelectedReason] = useState<string>('');
     const [note, setNote] = useState<string>('');
 
     const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
@@ -40,30 +41,32 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     function addCashFlow() {
         // add a new cash flow entry in collection `cashflow`; -> no need!!
         // add a new field in `cashflow_summary` in the corresponding year
-        // update the a) cashflow count, b)the cash_bal, c)net_worth in `appContext.selectedPortPath`
-        if (!appContext) return;
-        const newIdCount = appContext.cashflowCount + 1;
+        // update the a) cashflow count, b)the cash_bal, c)net_worth in `portfolioContext.selectedPortPath`
+        if (!portfolioContext) return;
+        const newIdCount = portfolioContext.cashflowCount + 1;
         const cfID = `cf_${newIdCount.toString().padStart(6, '0')}`;
         const cfYear = dayjs(cTime).tz().format('YYYY');
-        const cfSumDocRef = doc(db, `${appContext.selectedPortPath}/cashflow_summary/${cfYear}`);
+        const cfSumDocRef = doc(db, `${portfolioContext.selectedPortPath}/cashflow_summary/${cfYear}`);
+
         const newCashFlow: CashflowEntry = {
             date: dayjs(cTime).tz().format('YYYY-MM-DD'),
             type: selectedType,
             amount: amount,
-            bal_prev: appContext.cashBalance,
-            bal_after: selectedType === 'in' ? appContext.cashBalance + amount : appContext.cashBalance - amount,
+            bal_prev: portfolioContext.cashBalance,
+            bal_after: selectedType === 'in' ? portfolioContext.cashBalance + amount : portfolioContext.cashBalance - amount,
             reason: selectedReason,
             time_stamp: cTime,
             note: note,
             created_at: dayjs().tz().format(),
         };
         setDoc(cfSumDocRef, {[cfID]: newCashFlow}, { merge: true }).then(() => {
-            const portSumDocRef = doc(db, appContext.selectedPortPath!);
+            const portSumDocRef = doc(db, portfolioContext.selectedPortPath!);
             setDoc(portSumDocRef, {
                 cashflow_count: newIdCount,
                 cash: newCashFlow.bal_after,
-                net_worth: newCashFlow.bal_after + appContext.positionValue
+                net_worth: newCashFlow.bal_after + portfolioContext.positionValue
             }, { merge: true }).then(() => {
+                console.log(`addCashFlow: ${cfID} added successfully`);
                 setSuccessMessage(`Cash flow ${cfID} added successfully`);
             })
         }).catch((error) => {
@@ -72,8 +75,31 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
 
     }
 
+    function handleClose() {
+        setCTime(dayjs().valueOf());
+        setSelectedType('in');
+        setAmount(0);
+        setSelectedReason('cash in');
+        setNote('');
+        setInfoMessage(undefined);
+        setErrorMessage(undefined);
+        setSuccessMessage(undefined);
+        setIsLoading(false);
+        props.onClose();
+    }
+
+    useEffect(() => {
+        if (selectedType === 'in') {
+            setReasonOptions(['cash in', 'sell', 'other']);
+            setSelectedReason('cash in');
+        } else {
+            setReasonOptions(['buy', 'cash out', 'other']);
+            setSelectedReason('buy');
+        }
+    },[selectedType]);
+
     return (
-        <Modal open={props.open} onClose={props.onClose}>
+        <Modal open={props.open} onClose={handleClose}>
             <Box sx={styleModalBox}>
                 <Box sx={styleMainColBox}>
                     <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}> <CurrencyExchangeOutlinedIcon /> </Avatar>
@@ -128,7 +154,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                                     fullWidth
                                     label={'Reason'}
                                     value={selectedReason}
-                                    onChange={(e) => setSelectedReason(e.target.value as 'cash in' | 'sell' | 'buy' | 'cash out' | 'other')}
+                                    onChange={(e) => setSelectedReason(e.target.value as string)}
                                 >
                                     {reasonOptions.map((option) => (
                                         <MenuItem key={option} value={option}>
@@ -155,8 +181,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                     {infoMessage && <MessageBox open={infoMessage ? true : false} onClose={() => setInfoMessage(undefined)} type='info' message={infoMessage} />}
                     {errorMessage && <MessageBox open={errorMessage ? true : false} onClose={() => setErrorMessage(undefined)} type='error' message={errorMessage} />}
                     {successMessage && <MessageBox open={successMessage ? true : false} onClose={() => {
-                        setSuccessMessage(undefined);
-                        props.onClose();
+                        handleClose();
                     }} type='success' message={successMessage} />}
                 </Box>
             </Box>
