@@ -2,9 +2,12 @@
 import { Alert, Box, Button, CircularProgress, Modal, type AlertColor } from "@mui/material";
 
 import { createTheme } from '@mui/material/styles';
+import { auth } from "../utils/firebaseConfig";
+import axios from "axios";
+import { serverURL } from "../utils/firebaseConfigDetails";
+
 
 export const defaultTheme = createTheme();
-
 
 export const btnBox = { display: 'flex', alignItems: 'center', justifyContent: 'space-around', width: '100%', my: 2 }
 
@@ -101,4 +104,28 @@ export function MessageBox(props: { open: boolean, onClose: () => void, type: st
         </Modal>
     )
 
+}
+
+
+export function markToMarket(tickerList: string[], mtmDate: string) {
+    if (auth.currentUser) {
+        auth.currentUser.getIdToken().then((token) => {
+            axios.post(`${serverURL}/batch-mtm`, {
+                tickerList: tickerList,
+                date: mtmDate,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }).then((response) => {
+                console.log('close price loaded successfully:', response.data);
+                return response.data;
+            }).catch((error) => {
+                console.error('Error loading close price:', error);
+                return undefined;
+            })
+        })
+    } else {
+        return undefined;
+    }
 }

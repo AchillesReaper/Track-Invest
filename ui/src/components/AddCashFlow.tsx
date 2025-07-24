@@ -28,7 +28,6 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     const typeOptions = ['in', 'out'];
     const [selectedType, setSelectedType] = useState<'in' | 'out'>('in');
     const [amount, setAmount] = useState<number>(0);
-    // const reasonOptions = ['cash in', 'sell', 'buy', 'cash out', 'other'];
     const [reasonOptions, setReasonOptions] = useState<string[] >([]);
     const [selectedReason, setSelectedReason] = useState<string>('');
     const [note, setNote] = useState<string>('');
@@ -39,9 +38,8 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
     function addCashFlow() {
-        // add a new cash flow entry in collection `cashflow`; -> no need!!
-        // add a new field in `cashflow_summary` in the corresponding year
-        // update the a) cashflow count, b)the cash_bal, c)net_worth in `portfolioContext.selectedPortPath`
+        // 1. add a new field in `cashflow_summary` in the corresponding year
+        // 2. update the a) cashflow count, b)the cash_bal, c)net_worth in `portfolioContext.selectedPortPath/portfolio_summary/current`
         if (!portfolioContext) return;
         const newIdCount = portfolioContext.cashflowCount + 1;
         const cfID = `cf_${newIdCount.toString().padStart(6, '0')}`;
@@ -52,19 +50,19 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
             date: dayjs(cTime).tz().format('YYYY-MM-DD'),
             type: selectedType,
             amount: amount,
-            bal_prev: portfolioContext.cashBalance,
-            bal_after: selectedType === 'in' ? portfolioContext.cashBalance + amount : portfolioContext.cashBalance - amount,
+            balPrev: portfolioContext.cashBalance,
+            balAfter: selectedType === 'in' ? portfolioContext.cashBalance + amount : portfolioContext.cashBalance - amount,
             reason: selectedReason,
-            time_stamp: cTime,
+            timeStamp: cTime,
             note: note,
-            created_at: dayjs().tz().format(),
+            createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss z'),
         };
         setDoc(cfSumDocRef, {[cfID]: newCashFlow}, { merge: true }).then(() => {
-            const portSumDocRef = doc(db, portfolioContext.selectedPortPath!);
+            const portSumDocRef = doc(db, `${portfolioContext.selectedPortPath}/portfolio_summary/current`);
             setDoc(portSumDocRef, {
-                cashflow_count: newIdCount,
-                cash: newCashFlow.bal_after,
-                net_worth: newCashFlow.bal_after + portfolioContext.positionValue
+                cashflowCount: newIdCount,
+                cashBalance: newCashFlow.balAfter,
+                netWorth: newCashFlow.balAfter + portfolioContext.positionValue
             }, { merge: true }).then(() => {
                 console.log(`addCashFlow: ${cfID} added successfully`);
                 setSuccessMessage(`Cash flow ${cfID} added successfully`);

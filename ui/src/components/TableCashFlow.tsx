@@ -22,15 +22,14 @@ export default function TbCashFlow() {
         { field: 'type', headerName: 'Type', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
 
         { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'bal_prev', headerName: 'Balance Prev', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'bal_after', headerName: 'Balance After', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
+        { field: 'bal_prev', headerName: 'Bal. Prev', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
+        { field: 'bal_after', headerName: 'Bal. After', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
 
         { field: 'reason', headerName: 'Reason', type: 'string', width: 100 },
         // { field: 'time_stamp', headerName: 'Timestamp', type: 'number', width: 150, headerAlign: 'center', align: 'center' },
         { field: 'note', headerName: 'Note', type: 'string', width: 200 },
         { field: 'created_at', headerName: 'Created At', type: 'string', width: 200 }
     ];
-
 
 
     function CustomToolbar() {
@@ -71,12 +70,12 @@ export default function TbCashFlow() {
                     date: entry.date,
                     type: entry.type,
                     amount: entry.amount,
-                    bal_prev: entry.bal_prev,
-                    bal_after: entry.bal_after,
+                    bal_prev: entry.balPrev,
+                    bal_after: entry.balAfter,
                     reason: entry.reason,
-                    time_stamp: entry.time_stamp,
+                    time_stamp: entry.timeStamp,
                     note: entry.note,
-                    created_at: entry.created_at,
+                    created_at: entry.createdAt,
                 });
             });
             newRows.sort((a, b) => b.time_stamp - a.time_stamp); 

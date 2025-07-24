@@ -27,13 +27,6 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
         setDoc(newPortDocRef, {
             broker: broker,
             note: note,
-            cash: 0,
-            margin: 0,
-            position_value: 0,
-            net_worth: 0,
-            cashflow_count: 0,
-            transaction_count: 0,
-            mtm_time_stamp: dayjs().tz().valueOf(),
             created_at: dayjs().tz().format(),
         }).then(() => {
             setSuccessMessage(`Portfolio ${portfolioName} created successfully`);
@@ -51,6 +44,23 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
         }).catch((error) => {
             setErrorMessage(`addNewPort: ${error.message}`);
         })
+
+        // set portfolio summary
+        const portfolioSumDocPath = `users/${auth.currentUser!.email}/portfolios/${portfolioName}/portfolio_summary/current`;
+        setDoc(doc(db, portfolioSumDocPath), {
+            cashBalance: 0,
+            marginBalance: 0,
+            positionValue: 0,
+            netWorth: 0,
+            cashflowCount: 0,
+            transactionCount: 0,
+            mtmTimeStamp: dayjs().tz().valueOf(),
+            currentPositions: {},
+        }).then(() => {
+            setInfoMessage(`Portfolio summary for ${portfolioName} created successfully`);
+        }).catch((error) => {
+            setErrorMessage(`addNewPort: ${error.message}`);
+        });
     }
 
     return (
