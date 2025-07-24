@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import type { AppContextType, newportfolio } from "./dataInterface";
+import type { AppContextType, newportfolio, SinglePosition } from "./dataInterface";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
@@ -11,6 +11,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     let userDocUnsubscribe: (() => void) | null = null;
     let portfolioUnsubscribe: (() => void) | null = null;
     let portfolioSummaryUnsubscribe: (() => void) | null = null;
+    let positionCurrentUnsubscribe: (() => void) | null = null;
 
     const [isLoggedin, setIsLoggedin] = useState<boolean>(auth.currentUser !== null);
 
@@ -26,6 +27,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [cashflowCount, setCashflowCount] = useState<number>(0)
     const [transactionCount, setTransactionCount] = useState<number>(0)
     const [mtmTime, setMtmTime] = useState<string | undefined>(undefined)
+
+    const [positionCurrent, setPositionCurrent] = useState<{ [ticker: string]: SinglePosition } | undefined>(undefined);
 
     // check if stock list is in local storage if not getdoc from firebase
     const [stockList, setStockList] = useState<{ [ticker: string]: { fullExchangeName: string, longName: string } } | undefined>(undefined);
@@ -65,9 +68,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         setSelectedPortPath(newPortPath);
 
         // Clean up previous portfolio summary listener
-        if (portfolioSummaryUnsubscribe) {
-            portfolioSummaryUnsubscribe();
-        }
+            if (portfolioSummaryUnsubscribe) portfolioSummaryUnsubscribe();
+            if (positionCurrentUnsubscribe) positionCurrentUnsubscribe();
 
         // Set up listener for the new portfolio's summary data
         const portfolioDocRef = doc(db, newPortPath);
@@ -91,6 +93,18 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             }
         }, (error) => {
             console.error('Error listening to portfolio data:', error);
+        });
+        // Set up listener for the current positions in the selected portfolio
+        const positionCurrentDocRef = doc(db, `${newPortPath}/position_summary/current`);
+        positionCurrentUnsubscribe = onSnapshot(positionCurrentDocRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+                const positionData = docSnapshot.data() as { [ticker: string]: SinglePosition };
+                setPositionCurrent(positionData);
+                console.log(`Position data for portfolio ${portfolioId} updated`);
+                console.log(positionData);
+            }
+        }, (error) => {
+            console.error('Error listening to position data:', error);
         });
     };
 
@@ -141,8 +155,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         })
                     }
                 })
-            } else {
-                // User is signed out
+            } else {    // User is signed out
                 setIsLoggedin(false);
                 setPortList(undefined);
                 setSelectedPortfolio(undefined);

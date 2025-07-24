@@ -11,6 +11,7 @@ export interface AppContextType {
     cashflowCount: number,
     transactionCount: number,
     mtmTime: string | undefined,
+    currentPositions?: { [ticker: string]: SinglePosition } 
     // stock list should be store in the local storage
     stockList?: {
         [ticker: string]: {
