@@ -11,7 +11,6 @@ export default function ChartPositionAllocation() {
     let colorPalet: number = 0;
 
     const portfolioContext = useContext(PortfolioContext);
-    const marketValue = useMemo(() => portfolioContext?.positionValue, [portfolioContext]);
     const cashBalance = useMemo(() => portfolioContext?.cashBalance, [portfolioContext]);
     const netWorth = useMemo(() => portfolioContext?.netWorth, [portfolioContext]);
     const [assetClassAllocation, setAssetClassAllocation] = useState<any | undefined>(undefined)
@@ -53,7 +52,7 @@ export default function ChartPositionAllocation() {
         tkrAllo.push({ label: 'Cash', ticker: 'cash', value: cashBalance, assetClass: 'cash', color: palette[colorPalet + 1] });
         console.log('assAllo', assAllo);
         console.log('tkrAllo', tkrAllo);
-        
+
         setAssetClassAllocation(assAllo);
         setTickerAllocation(tkrAllo);
 
@@ -92,7 +91,7 @@ export default function ChartPositionAllocation() {
 
     return (
         <div className="elementCardR2 md:grow-0">
-            {netWorth ?
+            {netWorth && assetClassAllocation && tickerAllocation ?
                 <PieChart  {...setting} />
                 :
                 <div className="flex-1"></div>

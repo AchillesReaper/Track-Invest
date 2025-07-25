@@ -10,7 +10,7 @@ export default function ChartPnL() {
     // 1. show the net worth of the portfolio over time
     // 2. show the position value over time
     const portfolioContext = useContext(PortfolioContext);
-    const [displayYear, setDisplayYear] = useState<string>(dayjs().format('YYYY'));
+    const [displayYear] = useState<string>(dayjs().format('YYYY'));
     const [xAxisLabels, setXAxisLabels] = useState<string[] | undefined>(undefined)
     const [netWorth, setNetWorth] = useState<number[] | undefined>(undefined)
     const [mktVal, setMktVal] = useState<number[] | undefined>(undefined);
