@@ -201,6 +201,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             const monthlyOrderSumDocRef = doc(db, monthlyOrderSumPath);
             const newOrder: TransactionEntry = {
                 ticker: selectedTicker,
+                assetClass: assetClass,
                 amount: amount,
                 price: price,
                 type: selectedType,
