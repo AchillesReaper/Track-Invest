@@ -80,7 +80,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
         try {
             setIsLoading(true);
-            
+
             const newCfIdCount = portfolioContext.cashflowCount + 1;
             const newCfId = `cf_${newCfIdCount.toString().padStart(6, '0')}`;
             const cfYear = dayjs(tTime).tz().format('YYYY');
@@ -170,9 +170,9 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
             // ------ 4. call mark to market update function to update the market price and summary figures
             await portfolioMtmUpdate();
-            
+
             setSuccessMessage(`Order ${newOrderId} done successfully`);
-            
+
         } catch (error: any) {
             console.error(`Error processing buy order: ${error.message}`);
             setErrorMessage(`Error processing buy order: ${error.message}`);
@@ -268,7 +268,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
             // ------ 4. call mtm update function to update the market price and summary figures
             await portfolioMtmUpdate();
-            
+
             setSuccessMessage(`Order done! ${newOrderId}: Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
 
         } catch (error: any) {
@@ -282,26 +282,26 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     async function portfolioMtmUpdate() {
         console.log('Updating portfolio market prices...');
         if (!portfolioContext || !portfolioContext.currentPositions) return;
-        
+
         const tickerList = Object.keys(portfolioContext.currentPositions);
-        if (tickerList.length === 0) { 
-            console.warn('No positions to update'); 
-            return; 
+        if (tickerList.length === 0) {
+            console.warn('No positions to update');
+            return;
         }
 
         try {
             const mktPriceList = await markToMarket(tickerList, dayjs().tz().format('YYYY-MM-DD'));
-            if (!mktPriceList) { 
-                console.log('Failed to update market prices'); 
-                return; 
+            if (!mktPriceList) {
+                console.log('Failed to update market prices');
+                return;
             }
 
             const updatedPortPositions: { [key: string]: SinglePosition } = { ...portfolioContext.currentPositions };
-            
+
             for (const ticker of tickerList) {
-                if (!(mktPriceList[ticker])) { 
-                    console.warn(`No market price found for ${ticker}`); 
-                    continue; 
+                if (!(mktPriceList[ticker])) {
+                    console.warn(`No market price found for ${ticker}`);
+                    continue;
                 }
                 const mktPrice = mktPriceList[ticker];
                 updatedPortPositions[ticker].marketPrice = mktPrice;
@@ -309,21 +309,21 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                 updatedPortPositions[ticker].pnl = (mktPrice - updatedPortPositions[ticker].avgCost) * updatedPortPositions[ticker].amount;
                 updatedPortPositions[ticker].pnlPct = ((mktPrice / updatedPortPositions[ticker].avgCost - 1) * 100).toFixed(2) + '%';
             }
-            
+
             const updatedPositionValue = Object.values(updatedPortPositions).reduce((acc, pos) => acc + pos.marketValue, 0);
             const updatedNetWorth = portfolioContext.cashBalance + updatedPositionValue;
-            
+
             console.log(`Updated positions:`, updatedPortPositions);
-            
+
             await setDoc(doc(db, portfolioSumDocPath), {
                 positionValue: updatedPositionValue,
                 netWorth: updatedNetWorth,
                 currentPositions: updatedPortPositions,
                 mtmTimeStamp: dayjs().valueOf(),
             }, { merge: true });
-            
+
             console.log('Portfolio MTM update successful');
-            
+
         } catch (error: any) {
             console.error(`Error in portfolioMtmUpdate: ${error.message}`);
             // Don't throw error - just log it so transaction doesn't fail
@@ -397,7 +397,14 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                                         label='Time'
                                         value={dayjs(tTime)}
                                         shouldDisableTime={(time: Dayjs) => {
-                                            return time.valueOf() > dayjs().endOf('day').valueOf()
+                                            const isAfter: boolean = time.valueOf() > dayjs().endOf('day').valueOf();
+                                            let isBefore: boolean; // prevent logging cashflow in the past
+                                            if (!portfolioContext?.mtmTimeStamp) {
+                                                isBefore = false;
+                                            } else {
+                                                isBefore = time.valueOf() < portfolioContext.mtmTimeStamp;
+                                            }
+                                            return isBefore || isAfter;
                                         }}
                                         onChange={(newValue) => {
                                             if (newValue) setTTime(newValue.valueOf())

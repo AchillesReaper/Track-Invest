@@ -28,7 +28,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     const typeOptions = ['in', 'out'];
     const [selectedType, setSelectedType] = useState<'in' | 'out'>('in');
     const [amount, setAmount] = useState<number>(0);
-    const [reasonOptions, setReasonOptions] = useState<string[] >([]);
+    const [reasonOptions, setReasonOptions] = useState<string[]>([]);
     const [selectedReason, setSelectedReason] = useState<string>('');
     const [note, setNote] = useState<string>('');
 
@@ -37,14 +37,16 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
-    function addCashFlow() {
+    async function addCashFlow() {
         // 1. add a new field in `cashflow_summary` in the corresponding year
         // 2. update the a) cashflow count, b)the cash_bal, c)net_worth in `portfolioContext.selectedPortPath/portfolio_summary/current`
         if (!portfolioContext) return;
         const newIdCount = portfolioContext.cashflowCount + 1;
         const cfID = `cf_${newIdCount.toString().padStart(6, '0')}`;
         const cfYear = dayjs(cTime).tz().format('YYYY');
+
         const cfSumDocRef = doc(db, `${portfolioContext.selectedPortPath}/cashflow_summary/${cfYear}`);
+        const portSumDocRef = doc(db, `${portfolioContext.selectedPortPath}/portfolio_summary/current`);
 
         const newCashFlow: CashflowEntry = {
             date: dayjs(cTime).tz().format('YYYY-MM-DD'),
@@ -57,9 +59,11 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
             note: note,
             createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss z'),
         };
-        setDoc(cfSumDocRef, {[cfID]: newCashFlow}, { merge: true }).then(() => {
-            const portSumDocRef = doc(db, `${portfolioContext.selectedPortPath}/portfolio_summary/current`);
-            setDoc(portSumDocRef, {
+        try {
+            setIsLoading(true);
+            await setDoc(cfSumDocRef, { [cfID]: newCashFlow }, { merge: true })
+
+            await setDoc(portSumDocRef, {
                 cashflowCount: newIdCount,
                 cashBalance: newCashFlow.balAfter,
                 netWorth: newCashFlow.balAfter + portfolioContext.positionValue
@@ -67,10 +71,12 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                 console.log(`addCashFlow: ${cfID} added successfully`);
                 setSuccessMessage(`Cash flow ${cfID} added successfully`);
             })
-        }).catch((error) => {
+        } catch (error: any) {
             console.error(`addCashFlow: ${error.message}`);
-        })
-
+            setErrorMessage(`Failed to add cash flow: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     function handleClose() {
@@ -94,7 +100,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
             setReasonOptions(['buy', 'cash out', 'other']);
             setSelectedReason('buy');
         }
-    },[selectedType]);
+    }, [selectedType]);
 
     return (
         <Modal open={props.open} onClose={handleClose}>
@@ -111,7 +117,14 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                                     label='Time'
                                     value={dayjs(cTime)}
                                     shouldDisableTime={(time: Dayjs) => {
-                                        return time.valueOf() > dayjs().endOf('day').valueOf()
+                                        const isAfter: boolean = time.valueOf() > dayjs().endOf('day').valueOf();
+                                        let isBefore: boolean; // prevent logging cashflow in the past
+                                        if (!portfolioContext?.mtmTimeStamp){
+                                            isBefore = false;
+                                        } else {
+                                            isBefore = time.valueOf() < portfolioContext.mtmTimeStamp;
+                                        }
+                                        return isBefore || isAfter;
                                     }}
                                     onChange={(newValue) => {
                                         if (newValue) setCTime(newValue.valueOf())

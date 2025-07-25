@@ -1,7 +1,7 @@
 import { PieChart, type PieChartProps } from "@mui/x-charts/PieChart";
 import { rainbowSurgePalette } from '@mui/x-charts/colorPalettes';
 import { useTheme } from '@mui/material/styles';
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { PortfolioContext } from "../utils/contexts";
 import type { SinglePosition } from "../utils/dataInterface";
 
@@ -11,14 +11,13 @@ export default function ChartPositionAllocation() {
     let colorPalet: number = 0;
 
     const portfolioContext = useContext(PortfolioContext);
-    const [marketValue , setMarketValue] = useState<number | undefined>(undefined)
+    const marketValue = useMemo(() => portfolioContext?.positionValue, [portfolioContext]);
     const [assetClassAllocation, setAssetClassAllocation] = useState<any | undefined>(undefined)
     const [tickerAllocation, setTickerAllocation] = useState<any | undefined>(undefined)
 
     useEffect(() => {
         console.log(portfolioContext);
         if (!portfolioContext || !portfolioContext.currentPositions) return;
-        setMarketValue(portfolioContext.positionValue);
         const currentPositions: Record<string, SinglePosition> = portfolioContext.currentPositions;
         // sort the positions by asset class
         const sortedPositions = Object.entries(currentPositions).sort((a, b) => {
@@ -58,6 +57,7 @@ export default function ChartPositionAllocation() {
 
     }, [portfolioContext]);
 
+    const valueFormatter = (item: { value: number }) => `${(item.value/marketValue! * 100).toFixed(2)}%`;
 
 
     const setting = {
@@ -67,8 +67,8 @@ export default function ChartPositionAllocation() {
                 innerRadius: 0,
                 outerRadius: 80,
                 data: assetClassAllocation,
-                arcLabel: (item) => `${item.label}: ${(item.value / marketValue * 100).toFixed(0)}%`,
-                // arcLabel: (item) => `${item.label}: $${item.value.toLocaleString()}`,
+                valueFormatter: valueFormatter,
+                arcLabel: (item) => `${item.label}`,
                 arcLabelMinAngle: 35,
                 highlightScope: { fade: 'series', highlight: 'item' },
                 faded: { innerRadius: 0, additionalRadius: -50, color: 'gray' },
@@ -78,11 +78,12 @@ export default function ChartPositionAllocation() {
                 innerRadius: 100,
                 outerRadius: 120,
                 data: tickerAllocation,
+                valueFormatter: valueFormatter,
                 highlightScope: { fade: 'global', highlight: 'item' },
                 faded: { innerRadius: 50, additionalRadius: -50, color: 'gray' },
             },
         ],
-        height: 300,
+        height: 330,
         hideLegend: true,
     } satisfies PieChartProps;
 

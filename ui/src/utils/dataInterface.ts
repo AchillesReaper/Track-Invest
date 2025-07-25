@@ -24,7 +24,7 @@ export interface PortfolioContextType {
     netWorth: number,
     cashflowCount: number,
     transactionCount: number,
-    mtmTimeStamp: number,
+    mtmTimeStamp: number,   // used to prevent logging trade/cashflow in the past
     currentPositions: { [ticker: string]: SinglePosition } | undefined,
 }
 
