@@ -79,8 +79,6 @@ export default function TbCashFlow() {
                 });
             });
             newRows.sort((a, b) => b.time_stamp - a.time_stamp); 
-            
-            console.log('Cashflow summary fetched:', newRows);
             setTableRows(newRows);
         })
         return () => unsubscribe();

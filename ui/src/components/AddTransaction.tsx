@@ -256,6 +256,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             } else {
                 updatedPortPositions[selectedTicker] = updatedTickerPosition;
             }
+            // console.log(`updatedPortPositions:`, updatedPortPositions);
 
             await setDoc(doc(db, portfolioSumDocPath), {
                 cashBalance: newCashFlow.balAfter,
