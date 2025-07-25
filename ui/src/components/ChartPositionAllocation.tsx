@@ -12,11 +12,13 @@ export default function ChartPositionAllocation() {
 
     const portfolioContext = useContext(PortfolioContext);
     const marketValue = useMemo(() => portfolioContext?.positionValue, [portfolioContext]);
+    const cashBalance = useMemo(() => portfolioContext?.cashBalance, [portfolioContext]);
+    const netWorth = useMemo(() => portfolioContext?.netWorth, [portfolioContext]);
     const [assetClassAllocation, setAssetClassAllocation] = useState<any | undefined>(undefined)
     const [tickerAllocation, setTickerAllocation] = useState<any | undefined>(undefined)
 
     useEffect(() => {
-        if (!portfolioContext || !portfolioContext.currentPositions) return;
+        if (!portfolioContext || !portfolioContext.currentPositions || cashBalance === undefined) return;
         const currentPositions: Record<string, SinglePosition> = portfolioContext.currentPositions;
         // sort the positions by asset class
         const sortedPositions = Object.entries(currentPositions).sort((a, b) => {
@@ -47,13 +49,17 @@ export default function ChartPositionAllocation() {
             }
             return acc; // Always return the accumulator!
         }, [] as Array<{ label: string, value: number, color: string, assetClass: string }>);
-
+        assAllo.push({ label: 'Cash', assetClass: 'cash', value: cashBalance, color: palette[colorPalet + 1] });
+        tkrAllo.push({ label: 'Cash', ticker: 'cash', value: cashBalance, assetClass: 'cash', color: palette[colorPalet + 1] });
+        console.log('assAllo', assAllo);
+        console.log('tkrAllo', tkrAllo);
+        
         setAssetClassAllocation(assAllo);
         setTickerAllocation(tkrAllo);
 
     }, [portfolioContext]);
 
-    const valueFormatter = (item: { value: number }) => `${(item.value/marketValue! * 100).toFixed(2)}%`;
+    const valueFormatter = (item: { value: number }) => `${(item.value/netWorth! * 100).toFixed(2)}%`;
 
 
     const setting = {
@@ -86,8 +92,10 @@ export default function ChartPositionAllocation() {
 
     return (
         <div className="elementCardR2 md:grow-0">
-            {assetClassAllocation && tickerAllocation && tickerAllocation.length > 0 && marketValue &&
+            {netWorth ?
                 <PieChart  {...setting} />
+                :
+                <div className="flex-1"></div>
             }
         </div>
     );

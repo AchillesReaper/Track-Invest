@@ -1,42 +1,78 @@
 import { LineChart } from '@mui/x-charts/LineChart';
-import { portfolioPosition, accumPnL } from './ZDummyDB';
+import { useContext, useEffect, useState } from 'react';
+import dayjs from 'dayjs';
+import { PortfolioContext } from '../utils/contexts';
+import { doc, getDoc } from 'firebase/firestore';
+import type { PortfolioContextType } from '../utils/dataInterface';
+import { db } from '../utils/firebaseConfig';
 
 export default function ChartPnL() {
-    const xAxisLabels = Object.keys(portfolioPosition)
-    
-    // ---------- market value of the portfolio ----------
-    const mktVal = Object.values(portfolioPosition).map((monthlyPos) => {
-        const monthlyPosValList = Object.values(monthlyPos).map((stockDetail) => (stockDetail.marketValue))
-        return monthlyPosValList.reduce((acc: number, curr: number) => acc + curr, 0)
-    })
+    // 1. show the net worth of the portfolio over time
+    // 2. show the position value over time
+    const portfolioContext = useContext(PortfolioContext);
+    const [displayYear, setDisplayYear] = useState<string>(dayjs().format('YYYY'));
+    const [xAxisLabels, setXAxisLabels] = useState<string[] | undefined>(undefined)
+    const [netWorth, setNetWorth] = useState<number[] | undefined>(undefined)
+    const [mktVal, setMktVal] = useState<number[] | undefined>(undefined);
 
 
-    // ---------- accumulated PnL ----------
-    const pnlVal = Object.values(accumPnL)
+
+    useEffect(() => {
+        if (!portfolioContext || !portfolioContext.selectedPortPath) return;
+        // check if the displayYear is the year of the current portfolio
+        const isCurrentYear = dayjs(portfolioContext?.mtmTimeStamp).format('YYYY') === displayYear;
+        const xAxis: string[] = [];
+        const netWorthList: number[] = [];
+        const mktValList: number[] = [];
+        getDoc(doc(db, `${portfolioContext.selectedPortPath}/portfolio_summary/${displayYear}`)).then((docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data() as Record<string, PortfolioContextType>;
+                xAxis.push(...Object.keys(data).sort());
+                xAxis.forEach((recordMonth) => {
+                    const record = data[recordMonth];
+                    netWorthList.push(record.netWorth);
+                    mktValList.push(record.positionValue);
+                });
+                if (isCurrentYear) {
+                    // if the current year, add the current month
+                    xAxis.push(`current`);
+                    netWorthList.push(portfolioContext.netWorth || 0);
+                    mktValList.push(portfolioContext.positionValue || 0);
+                }
+                setXAxisLabels(xAxis);
+                setNetWorth(netWorthList);
+                setMktVal(mktValList);
+            } else {
+                console.error('No data found for the selected year:', displayYear);
+            }
+        });
+    }, [portfolioContext, displayYear]);
 
     return (
         <div className="elementCardR2">
-            <LineChart
-                height={300}
-                grid={{ horizontal: true }}
-                series={[
-                    { data: mktVal, label: 'market value', yAxisId: 'leftAxisId' },
-                    { data: pnlVal, label: 'accum P/L', yAxisId: 'rightAxisId' },
-                ]}
-                xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
-                yAxis={[
-                    { 
-                        id: 'leftAxisId', 
-                        position: 'left', 
-                        valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`,
-                    },
-                    { 
-                        id: 'rightAxisId', 
-                        position: 'right',
-                        valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k` 
-                    },
-                ]}
-            />
+            {xAxisLabels && mktVal && netWorth &&
+                <LineChart
+                    height={300}
+                    grid={{ horizontal: true }}
+                    series={[
+                        { data: mktVal, label: 'Market Value', yAxisId: 'leftAxisId' },
+                        { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId' },
+                    ]}
+                    xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
+                    yAxis={[
+                        {
+                            id: 'leftAxisId',
+                            position: 'left',
+                            valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`,
+                        },
+                        {
+                            id: 'rightAxisId',
+                            position: 'right',
+                            valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
+                        },
+                    ]}
+                />
+            }
 
         </div>
     );
