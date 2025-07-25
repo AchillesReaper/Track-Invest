@@ -16,7 +16,6 @@ export default function ChartPositionAllocation() {
     const [tickerAllocation, setTickerAllocation] = useState<any | undefined>(undefined)
 
     useEffect(() => {
-        console.log(portfolioContext);
         if (!portfolioContext || !portfolioContext.currentPositions) return;
         const currentPositions: Record<string, SinglePosition> = portfolioContext.currentPositions;
         // sort the positions by asset class
@@ -30,7 +29,6 @@ export default function ChartPositionAllocation() {
             colorPalet += 1;
             return { label: position.ticker, ticker: ticker, value: position.marketValue, assetClass: position.assetClass, color: palette[colorPalet] }
         });
-        console.log(tkrAllo);
 
         // sum up the market value of each asset class
         const assAllo = tkrAllo.reduce((acc, curr) => {
@@ -49,8 +47,6 @@ export default function ChartPositionAllocation() {
             }
             return acc; // Always return the accumulator!
         }, [] as Array<{ label: string, value: number, color: string, assetClass: string }>);
-
-        console.log(assAllo);
 
         setAssetClassAllocation(assAllo);
         setTickerAllocation(tkrAllo);

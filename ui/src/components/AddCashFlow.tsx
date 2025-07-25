@@ -16,6 +16,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { PortfolioContext } from "../utils/contexts";
+import { createMonthlyStatementIfNeeded } from "../utils/monthlyPortfolioSummary";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault("Australia/Sydney");
@@ -61,12 +62,15 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         };
         try {
             setIsLoading(true);
+            await createMonthlyStatementIfNeeded(portfolioContext, cTime);
+
             await setDoc(cfSumDocRef, { [cfID]: newCashFlow }, { merge: true })
 
             await setDoc(portSumDocRef, {
                 cashflowCount: newIdCount,
                 cashBalance: newCashFlow.balAfter,
-                netWorth: newCashFlow.balAfter + portfolioContext.positionValue
+                netWorth: newCashFlow.balAfter + portfolioContext.positionValue,
+                mtmTimeStamp: cTime,
             }, { merge: true }).then(() => {
                 console.log(`addCashFlow: ${cfID} added successfully`);
                 setSuccessMessage(`Cash flow ${cfID} added successfully`);

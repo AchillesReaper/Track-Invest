@@ -1,5 +1,5 @@
 import { Autocomplete, Avatar, Box, Button, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
-import { LoadingBox, markToMarket, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
+import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext, PortfolioContext } from "../utils/contexts";
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -15,6 +15,7 @@ import timezone from 'dayjs/plugin/timezone';
 import { serverURL } from "../utils/firebaseConfigDetails";
 import type { CashflowEntry, SinglePosition, TransactionEntry } from "../utils/dataInterface";
 import { doc, setDoc } from "firebase/firestore";
+import { createMonthlyStatementIfNeeded, portfolioMtmUpdate } from "../utils/monthlyPortfolioSummary";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault("Australia/Sydney");
@@ -80,6 +81,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
         try {
             setIsLoading(true);
+            await createMonthlyStatementIfNeeded(portfolioContext, tTime);
 
             const newCfIdCount = portfolioContext.cashflowCount + 1;
             const newCfId = `cf_${newCfIdCount.toString().padStart(6, '0')}`;
@@ -169,7 +171,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             console.log(`Portfolio summary updated for order ${newOrderId}`);
 
             // ------ 4. call mark to market update function to update the market price and summary figures
-            await portfolioMtmUpdate();
+            await portfolioMtmUpdate(portfolioContext, dayjs(tTime).tz().format('YYYY-MM-DD'));
 
             setSuccessMessage(`Order ${newOrderId} done successfully`);
 
@@ -193,7 +195,8 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
         try {
             setIsLoading(true);
-
+            await createMonthlyStatementIfNeeded(portfolioContext, tTime);
+            
             // ------ 1. log transaction entry
             const newOrderCount = portfolioContext.transactionCount + 1;
             const newOrderId = `tx_${newOrderCount.toString().padStart(6, '0')}`;
@@ -267,7 +270,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             console.log(`Position updated: ${selectedTicker} - ${updatedAmount} shares`);
 
             // ------ 4. call mtm update function to update the market price and summary figures
-            await portfolioMtmUpdate();
+            await portfolioMtmUpdate(portfolioContext, dayjs(tTime).tz().format('YYYY-MM-DD'));
 
             setSuccessMessage(`Order done! ${newOrderId}: Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
 
@@ -276,57 +279,6 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             setErrorMessage(`Error processing sell order: ${error.message}`);
         } finally {
             setIsLoading(false);
-        }
-    }
-
-    async function portfolioMtmUpdate() {
-        console.log('Updating portfolio market prices...');
-        if (!portfolioContext || !portfolioContext.currentPositions) return;
-
-        const tickerList = Object.keys(portfolioContext.currentPositions);
-        if (tickerList.length === 0) {
-            console.warn('No positions to update');
-            return;
-        }
-
-        try {
-            const mktPriceList = await markToMarket(tickerList, dayjs().tz().format('YYYY-MM-DD'));
-            if (!mktPriceList) {
-                console.log('Failed to update market prices');
-                return;
-            }
-
-            const updatedPortPositions: { [key: string]: SinglePosition } = { ...portfolioContext.currentPositions };
-
-            for (const ticker of tickerList) {
-                if (!(mktPriceList[ticker])) {
-                    console.warn(`No market price found for ${ticker}`);
-                    continue;
-                }
-                const mktPrice = mktPriceList[ticker];
-                updatedPortPositions[ticker].marketPrice = mktPrice;
-                updatedPortPositions[ticker].marketValue = mktPrice * updatedPortPositions[ticker].amount;
-                updatedPortPositions[ticker].pnl = (mktPrice - updatedPortPositions[ticker].avgCost) * updatedPortPositions[ticker].amount;
-                updatedPortPositions[ticker].pnlPct = ((mktPrice / updatedPortPositions[ticker].avgCost - 1) * 100).toFixed(2) + '%';
-            }
-
-            const updatedPositionValue = Object.values(updatedPortPositions).reduce((acc, pos) => acc + pos.marketValue, 0);
-            const updatedNetWorth = portfolioContext.cashBalance + updatedPositionValue;
-
-            console.log(`Updated positions:`, updatedPortPositions);
-
-            await setDoc(doc(db, portfolioSumDocPath), {
-                positionValue: updatedPositionValue,
-                netWorth: updatedNetWorth,
-                currentPositions: updatedPortPositions,
-                mtmTimeStamp: dayjs().valueOf(),
-            }, { merge: true });
-
-            console.log('Portfolio MTM update successful');
-
-        } catch (error: any) {
-            console.error(`Error in portfolioMtmUpdate: ${error.message}`);
-            // Don't throw error - just log it so transaction doesn't fail
         }
     }
 
