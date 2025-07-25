@@ -131,3 +131,13 @@ export async function markToMarket(tickerList: string[], mtmDate: string): Promi
     }
 }
 
+export function isDateTimeDisabled(dateTime: dayjs.Dayjs, mtmTimeStamp:number): boolean {
+    const isAfter: boolean = dateTime.valueOf() > dayjs().endOf('day').valueOf();
+    let isBefore: boolean; // prevent logging cashflow in the past
+    if (!mtmTimeStamp) {
+        isBefore = false;
+    } else {
+        isBefore = dateTime.valueOf() < mtmTimeStamp;
+    }
+    return isBefore || isAfter;
+}

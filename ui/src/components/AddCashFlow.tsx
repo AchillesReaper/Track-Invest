@@ -16,7 +16,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { PortfolioContext } from "../utils/contexts";
-import { createMonthlyStatementIfNeeded } from "../utils/monthlyPortfolioSummary";
+import { createMonthlyStatementIfNeeded, isDateTimeDisabled } from "../utils/monthlyPortfolioSummary";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault("Australia/Sydney");
@@ -120,16 +120,19 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                                 <DateTimePicker
                                     label='Time'
                                     value={dayjs(cTime)}
-                                    shouldDisableTime={(time: Dayjs) => {
-                                        const isAfter: boolean = time.valueOf() > dayjs().endOf('day').valueOf();
-                                        let isBefore: boolean; // prevent logging cashflow in the past
-                                        if (!portfolioContext?.mtmTimeStamp){
-                                            isBefore = false;
-                                        } else {
-                                            isBefore = time.valueOf() < portfolioContext.mtmTimeStamp;
-                                        }
-                                        return isBefore || isAfter;
-                                    }}
+                                    // shouldDisableTime={(time: Dayjs) => {
+                                    //     const isAfter: boolean = time.valueOf() > dayjs().endOf('day').valueOf();
+                                    //     let isBefore: boolean; // prevent logging cashflow in the past
+                                    //     if (!portfolioContext?.mtmTimeStamp) {
+                                    //         isBefore = false;
+                                    //     } else {
+                                    //         isBefore = time.valueOf() < portfolioContext.mtmTimeStamp;
+                                    //     }
+                                    //     return isBefore || isAfter;
+                                    // }}
+
+                                    shouldDisableTime={(time: Dayjs) => isDateTimeDisabled(time, portfolioContext!.mtmTimeStamp)}
+                                    shouldDisableDate={(date: Dayjs) => isDateTimeDisabled(date, portfolioContext!.mtmTimeStamp)}
                                     onChange={(newValue) => {
                                         if (newValue) setCTime(newValue.valueOf())
                                     }}
