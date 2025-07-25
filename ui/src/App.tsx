@@ -2,7 +2,7 @@
 import { useContext, useState } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Divider, Drawer, Grid, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 import { AccountCircle, Logout } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
@@ -106,14 +106,22 @@ export default function App() {
                                 </Typography>
                             </Toolbar>
                         </AppBar>
-                        <div className="grid grid-cols-1">
-                            <AccountSummary />
-                            <div className="mainRow2">
+                        <Grid container spacing={2} sx={{ padding: 2, flexGrow: 1 }}>
+                            <Grid size={{ xs: 12 }}>
+                                {/* Account Summary */}
+                                <AccountSummary />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                                {/* Chart Position Allocation */}
                                 <ChartPositionAllocation />
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 8 }}>
                                 <ChartPnL />
-                            </div>
-                            <DetailTables />
-                        </div>
+                            </Grid>
+                            <Grid size={{ xs: 12 }}>
+                                <DetailTables />
+                            </Grid>
+                        </Grid>
                     </Box>
                     <AddNewPortfolio open={isAddNewPortfolio} onClose={() => SetIsAddNewPortfolio(false)} />
                 </Box>
