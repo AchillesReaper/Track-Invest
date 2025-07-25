@@ -1,4 +1,3 @@
-
 import { Alert, Box, Button, CircularProgress, Modal, type AlertColor } from "@mui/material";
 
 import { createTheme } from '@mui/material/styles';
@@ -107,25 +106,27 @@ export function MessageBox(props: { open: boolean, onClose: () => void, type: st
 }
 
 
-export function markToMarket(tickerList: string[], mtmDate: string) {
-    if (auth.currentUser) {
-        auth.currentUser.getIdToken().then((token) => {
-            axios.post(`${serverURL}/batch-mtm`, {
-                tickerList: tickerList,
-                date: mtmDate,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }).then((response) => {
-                console.log('close price loaded successfully:', response.data);
-                return response.data;
-            }).catch((error) => {
-                console.error('Error loading close price:', error);
-                return undefined;
-            })
-        })
-    } else {
+export async function markToMarket(tickerList: string[], mtmDate: string): Promise<any | undefined> {
+    if (!auth.currentUser) {
+        console.warn('No authenticated user found');
+        return undefined;
+    }
+
+    try {
+        const token = await auth.currentUser.getIdToken();
+        const response = await axios.post(`${serverURL}/batch-mtm`, {
+            tickerList: tickerList,
+            date: mtmDate,
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        
+        console.log('Market prices loaded successfully:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error loading market prices:', error);
         return undefined;
     }
 }

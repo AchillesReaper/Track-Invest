@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { assetAllocation } from "./ZDummyDB";
 import type { GridPositionRowEntry } from "../utils/dataInterface";
 import { PortfolioContext } from "../utils/contexts";
 

@@ -1,40 +1,74 @@
 import { PieChart, type PieChartProps } from "@mui/x-charts/PieChart";
 import { rainbowSurgePalette } from '@mui/x-charts/colorPalettes';
 import { useTheme } from '@mui/material/styles';
-import { assetAllocation } from "./ZDummyDB";
+import { useContext, useEffect, useState } from "react";
+import { PortfolioContext } from "../utils/contexts";
+import type { SinglePosition } from "../utils/dataInterface";
 
 export default function ChartPositionAllocation() {
     const theme = useTheme();
     const palette = rainbowSurgePalette(theme.palette.mode);
     let colorPalet: number = 0;
 
+    const portfolioContext = useContext(PortfolioContext);
+    const [marketValue , setMarketValue] = useState<number | undefined>(undefined)
+    const [assetClassAllocation, setAssetClassAllocation] = useState<any | undefined>(undefined)
+    const [tickerAllocation, setTickerAllocation] = useState<any | undefined>(undefined)
 
-    const data1 = Object.entries(assetAllocation).map(([assetType, assetDetail]) => {
-        const mktValAry: number[] = Object.values(assetDetail).map(stock => (stock.marketValue))
-        const mktVal: number = mktValAry.reduce((acc: number, curr: number) => acc + curr, 0)
-        colorPalet += 1;
+    useEffect(() => {
+        console.log(portfolioContext);
+        if (!portfolioContext || !portfolioContext.currentPositions) return;
+        setMarketValue(portfolioContext.positionValue);
+        const currentPositions: Record<string, SinglePosition> = portfolioContext.currentPositions;
+        // sort the positions by asset class
+        const sortedPositions = Object.entries(currentPositions).sort((a, b) => {
+            const assetClassA = a[1].assetClass.toLowerCase();
+            const assetClassB = b[1].assetClass.toLowerCase();
+            return assetClassA.localeCompare(assetClassB);
+        });
 
-        return { label: assetType, value: mktVal, color: palette[colorPalet] }
-    })
-    const data2 = Object.keys(assetAllocation).map((assetType) => {
-        const key = assetType as keyof typeof assetAllocation;
-        const groupData = Object.entries(assetAllocation[key]).map(([stockCode, stockDetail]) => {
+        const tkrAllo = sortedPositions.map(([ticker, position]) => {
             colorPalet += 1;
-            return { label: stockCode, value: stockDetail.marketValue, color: palette[colorPalet] }
-        })
-        return groupData
-    }).flat()
+            return { ticker: ticker, value: position.marketValue, assetClass: position.assetClass, color: palette[colorPalet] }
+        });
+        console.log(tkrAllo);
 
-    const total1 = data1.reduce((sum, d) => sum + d.value, 0);
-    
+        // sum up the market value of each asset class
+        const assAllo = tkrAllo.reduce((acc, curr) => {
+            const existing = acc.find(item => item.assetClass === curr.assetClass);
+            if (existing) {
+                // If asset class already exists, add to its value
+                existing.value += curr.value;
+            } else {
+                // If new asset class, create new entry
+                acc.push({
+                    label: curr.assetClass,
+                    value: curr.value,
+                    color: curr.color,
+                    assetClass: curr.assetClass
+                });
+            }
+            return acc; // Always return the accumulator!
+        }, [] as Array<{ label: string, value: number, color: string, assetClass: string }>);
+
+        console.log(assAllo);
+
+        setAssetClassAllocation(assAllo);
+        setTickerAllocation(tkrAllo);
+
+    }, [portfolioContext]);
+
+
+
     const setting = {
         series: [
             {
                 id: 'inner',
                 innerRadius: 0,
                 outerRadius: 80,
-                data: data1,
-                arcLabel: (item) => `${item.label}: ${(item.value / total1 * 100).toFixed(0)}%`,
+                data: assetClassAllocation,
+                arcLabel: (item) => `${item.label}: ${(item.value / marketValue * 100).toFixed(0)}%`,
+                // arcLabel: (item) => `${item.label}: $${item.value.toLocaleString()}`,
                 arcLabelMinAngle: 35,
                 highlightScope: { fade: 'series', highlight: 'item' },
                 faded: { innerRadius: 0, additionalRadius: -50, color: 'gray' },
@@ -43,19 +77,21 @@ export default function ChartPositionAllocation() {
                 id: 'outer',
                 innerRadius: 100,
                 outerRadius: 120,
-                data: data2,
+                data: tickerAllocation,
                 highlightScope: { fade: 'global', highlight: 'item' },
                 faded: { innerRadius: 50, additionalRadius: -50, color: 'gray' },
             },
         ],
         height: 300,
-        hideLegend: true, 
+        hideLegend: true,
     } satisfies PieChartProps;
 
 
     return (
         <div className="elementCardR2 md:grow-0">
-            <PieChart  {...setting} />
+            {assetClassAllocation && tickerAllocation && tickerAllocation.length > 0 && marketValue &&
+                <PieChart  {...setting} />
+            }
         </div>
     );
 }

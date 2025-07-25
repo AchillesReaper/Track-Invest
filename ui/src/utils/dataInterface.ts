@@ -65,6 +65,7 @@ export interface GridCashflowRowEntry {
 // **************** transaction ****************
 export interface TransactionEntry {
     ticker: string,
+    assetClass: string, // e.g. 'stock', 'bond', 'fund', 'crypto'
     amount: number,
     price: number,
     type: 'buy' | 'sell',
@@ -101,6 +102,7 @@ export interface GridTransactionRowEntry {
 //     |- 2024
 export interface SinglePosition {
     ticker: string,
+    assetClass: string, // e.g. 'stock', 'bond', 'fund', 'crypto'
     amount: number,
     avgCost: number,
     totalCost: number,

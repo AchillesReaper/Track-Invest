@@ -1,6 +1,6 @@
 import { Autocomplete, Avatar, Box, Button, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
 import { LoadingBox, markToMarket, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext, PortfolioContext } from "../utils/contexts";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
@@ -24,6 +24,8 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     const appContext = useContext(AppContext);
     const portfolioContext = useContext(PortfolioContext);
 
+    const assetClassOptions = ['stock', 'bond', 'fund', 'crypto'];
+    const [assetClass, setAssetClass] = useState<string>('stock');
     const stockList = appContext!.stockList;
     const tickerOpts = Object.keys(stockList || {});
     const [selectedTicker, setSelectedTicker] = useState<string | undefined>(undefined)
@@ -39,7 +41,18 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     const [otherFees, setOtherFees] = useState<number>(0);
     const [note, setNote] = useState<string>('');
 
-    const [totalCF, setTotalCF] = useState<number>(0)
+    // const [totalCF, setTotalCF] = useState<number>(0)
+
+    const totalCF = useMemo(() => {
+        switch (selectedType) {
+            case 'buy':
+                return amount * price + commission + otherFees;
+            case 'sell':
+                return amount * price - commission - otherFees;
+            default:
+                return 0;
+        }
+    }, [amount, price, commission, otherFees, selectedType]);
 
     const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -50,7 +63,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     const transactionColPath = `${portfolioContext?.selectedPortPath}/transactions`
     const portfolioSumDocPath = `${portfolioContext?.selectedPortPath}/portfolio_summary/current`
 
-    function handleBuy() {
+    async function handleBuy() {
         // 1. check if there is enough cash balance -> log a entry in cashflow
         // 2. create a new transaction object -> add it to corresponding month document
         // 3. update stock position in `portfolioContext.selectedPortPath/position_summary/current`
@@ -64,109 +77,111 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             setErrorMessage(`Not enough cash balance. Cash needed: $${totalCF.toLocaleString('en-US')}, Cash available: $${portfolioContext.cashBalance.toLocaleString('en-US')}`);
             return;
         }
-        const newCfIdCount = portfolioContext.cashflowCount + 1;
-        const newCfId = `cf_${newCfIdCount.toString().padStart(6, '0')}`;
-        const cfYear = dayjs(tTime).tz().format('YYYY');
-        const cfSumDocRef = doc(db, `${cashflowColPath}/${cfYear}`);
-        const newCashFlow: CashflowEntry = {
-            date: dayjs(tTime).tz().format('YYYY-MM-DD'),
-            type: 'out',
-            amount: totalCF,
-            balPrev: portfolioContext.cashBalance,
-            balAfter: portfolioContext.cashBalance - totalCF,
-            reason: 'buy',
-            timeStamp: tTime,
-            note: `Buy ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`,
-            createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss z'),
-        };
-        setDoc(cfSumDocRef, { [newCfId]: newCashFlow }, { merge: true }).then(() => {
+
+        try {
+            setIsLoading(true);
+            
+            const newCfIdCount = portfolioContext.cashflowCount + 1;
+            const newCfId = `cf_${newCfIdCount.toString().padStart(6, '0')}`;
+            const cfYear = dayjs(tTime).tz().format('YYYY');
+            const cfSumDocRef = doc(db, `${cashflowColPath}/${cfYear}`);
+            const newCashFlow: CashflowEntry = {
+                date: dayjs(tTime).tz().format('YYYY-MM-DD'),
+                type: 'out',
+                amount: totalCF,
+                balPrev: portfolioContext.cashBalance,
+                balAfter: portfolioContext.cashBalance - totalCF,
+                reason: 'buy',
+                timeStamp: tTime,
+                note: `Buy ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`,
+                createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss z'),
+            };
+
+            // Execute all Firebase operations
+            await setDoc(cfSumDocRef, { [newCfId]: newCashFlow }, { merge: true });
             console.log(`Cashflow deducted: (${newCfId}) - $${newCashFlow.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
-        }).catch((error) => {
-            console.error(`Error adding cashflow: ${error.message}`);
-            setErrorMessage(`Error adding cashflow: ${error.message}`);
-            return;
-        });
 
-        // ------ 2. update monthly transaction summary
-        const newOrderCount = portfolioContext.transactionCount + 1;
-        const newOrderId = `tx_${newOrderCount.toString().padStart(6, '0')}`;
-        const monthlyOrderSumDocRef = doc(db, `${transactionColPath}/${dayjs(tTime).tz().format('YYYY-MM')}`);
-        const newOrder: TransactionEntry = {
-            ticker: selectedTicker,
-            amount: amount,
-            price: price,
-            type: selectedType,
-            timeStamp: tTime,
-            time: dayjs(tTime).tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
-            commission: commission,
-            otherFees: otherFees,
-            totalCost: totalCF,
-            note: note,
-            createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
-        }
-        setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true }).then(() => {
-            console.log(`Transaction added: ${newOrderId} - ${selectedTicker} x ${amount}`);
-        }).catch((error) => {
-            console.error(`Error adding transaction: ${error.message}`);
-            setErrorMessage(`Error adding transaction: ${error.message}`);
-            return;
-        });
-
-        // ------ 3. update the stock position
-        let updatedPosition: SinglePosition | undefined;
-        if (currentTickerAmount > 0) {
-            // update the existing position
-            const currentTickerPosition: SinglePosition = portfolioContext.currentPositions![selectedTicker];
-            const updatedAmount = currentTickerPosition.amount + amount;
-            const updatedAvgCost = (currentTickerPosition.totalCost + totalCF) / updatedAmount;
-            updatedPosition = {
-                ...currentTickerPosition,
-                amount: updatedAmount,
-                avgCost: updatedAvgCost,
-                totalCost: updatedAmount * updatedAvgCost,
-                marketPrice: price,
-                marketValue: updatedAmount * price,
-                pnl: (price - updatedAvgCost) * updatedAmount,
-                pnlPct: ((price - updatedAvgCost) / updatedAvgCost * 100).toFixed(2) + '%',
-            };
-        } else {
-            // create a new position
-            updatedPosition = {
+            // ------ 2. update monthly transaction summary
+            const newOrderCount = portfolioContext.transactionCount + 1;
+            const newOrderId = `tx_${newOrderCount.toString().padStart(6, '0')}`;
+            const monthlyOrderSumDocRef = doc(db, `${transactionColPath}/${dayjs(tTime).tz().format('YYYY-MM')}`);
+            const newOrder: TransactionEntry = {
                 ticker: selectedTicker,
+                assetClass: assetClass,
                 amount: amount,
-                avgCost: price,
+                price: price,
+                type: selectedType,
+                timeStamp: tTime,
+                time: dayjs(tTime).tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
+                commission: commission,
+                otherFees: otherFees,
                 totalCost: totalCF,
-                marketPrice: price,
-                marketValue: amount * price,
-                pnl: 0, // no PnL for new position
-                pnlPct: '0.00%',
+                note: note,
+                createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
             };
-        }
 
-        const portSumDocRef = doc(db, portfolioSumDocPath);
-        setDoc(portSumDocRef, {
-            cashBalance: newCashFlow.balAfter,
-            // positionValue: portfolioContext.positionValue + (amount * price),
-            // netWorth: newCashFlow.balAfter + (portfolioContext.positionValue + (amount * price)),
-            cashflowCount: newCfIdCount,
-            transactionCount: newOrderCount,
-            // mtmTimeStamp: tTime,
-            currentPositions: {
-                ...portfolioContext.currentPositions,
-                [selectedTicker]: updatedPosition,
-            },
-        }, { merge: true }).then(() => {
+            await setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true });
+            console.log(`Transaction added: ${newOrderId} - ${selectedTicker} x ${amount}`);
+
+            // ------ 3. update the stock position
+            let updatedPosition: SinglePosition | undefined;
+            if (currentTickerAmount > 0) {
+                // update the existing position
+                const currentTickerPosition: SinglePosition = portfolioContext.currentPositions![selectedTicker];
+                const updatedAmount = currentTickerPosition.amount + amount;
+                const updatedAvgCost = (currentTickerPosition.totalCost + totalCF) / updatedAmount;
+                updatedPosition = {
+                    ...currentTickerPosition,
+                    amount: updatedAmount,
+                    avgCost: updatedAvgCost,
+                    totalCost: updatedAmount * updatedAvgCost,
+                    marketPrice: price,
+                    marketValue: updatedAmount * price,
+                    pnl: (price - updatedAvgCost) * updatedAmount,
+                    pnlPct: ((price - updatedAvgCost) / updatedAvgCost * 100).toFixed(2) + '%',
+                };
+            } else {
+                // create a new position
+                updatedPosition = {
+                    ticker: selectedTicker,
+                    assetClass: assetClass,
+                    amount: amount,
+                    avgCost: price,
+                    totalCost: totalCF,
+                    marketPrice: price,
+                    marketValue: amount * price,
+                    pnl: 0, // no PnL for new position
+                    pnlPct: '0.00%',
+                };
+            }
+
+            const portSumDocRef = doc(db, portfolioSumDocPath);
+            await setDoc(portSumDocRef, {
+                cashBalance: newCashFlow.balAfter,
+                cashflowCount: newCfIdCount,
+                transactionCount: newOrderCount,
+                currentPositions: {
+                    ...portfolioContext.currentPositions,
+                    [selectedTicker]: updatedPosition,
+                },
+            }, { merge: true });
+
+            console.log(`Portfolio summary updated for order ${newOrderId}`);
+
+            // ------ 4. call mark to market update function to update the market price and summary figures
+            await portfolioMtmUpdate();
+            
             setSuccessMessage(`Order ${newOrderId} done successfully`);
-        }).catch((error) => {
-            console.error(`Error updating portfolio summary: ${error.message}`);
-            setErrorMessage(`Error updating portfolio summary: ${error.message}`);
-        });
-        // ------ 4. call mark to market update function to update the market price and summary figures
-        portfolioMtmUpdate();
+            
+        } catch (error: any) {
+            console.error(`Error processing buy order: ${error.message}`);
+            setErrorMessage(`Error processing buy order: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
-
-    function handleSell() {
+    async function handleSell() {
         // 1. create a new transaction object -> log transaction entry to corresponding month document
         // 2. log cashflow entry in cashflow summary
         // 3. update ticker position in `portfolioContext.selectedPortPath/portfolio_summary/current`
@@ -176,123 +191,142 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         if (amount > currentTickerAmount) { setErrorMessage(`Not enough shares to sell for ${selectedTicker}`); return; }
         if (!portfolioContext) return;
 
-        // ------ 1. log transaction entry
-        const newOrderCount = portfolioContext.transactionCount + 1;
-        const newOrderId = `tx_${newOrderCount.toString().padStart(6, '0')}`;
-        const monthlyOrderSumPath = `${portfolioContext.selectedPortPath}/transactions/${dayjs(tTime).tz().format('YYYY-MM')}`;
-        const monthlyOrderSumDocRef = doc(db, monthlyOrderSumPath);
-        const newOrder: TransactionEntry = {
-            ticker: selectedTicker,
-            amount: amount,
-            price: price,
-            type: selectedType,
-            timeStamp: tTime,
-            time: dayjs(tTime).tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
-            commission: commission,
-            otherFees: otherFees,
-            totalCost: totalCF,
-            note: note,
-            createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
-        };
-        setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true }).then(() => {
+        try {
+            setIsLoading(true);
+
+            // ------ 1. log transaction entry
+            const newOrderCount = portfolioContext.transactionCount + 1;
+            const newOrderId = `tx_${newOrderCount.toString().padStart(6, '0')}`;
+            const monthlyOrderSumPath = `${portfolioContext.selectedPortPath}/transactions/${dayjs(tTime).tz().format('YYYY-MM')}`;
+            const monthlyOrderSumDocRef = doc(db, monthlyOrderSumPath);
+            const newOrder: TransactionEntry = {
+                ticker: selectedTicker,
+                amount: amount,
+                price: price,
+                type: selectedType,
+                timeStamp: tTime,
+                time: dayjs(tTime).tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
+                commission: commission,
+                otherFees: otherFees,
+                totalCost: totalCF,
+                note: note,
+                createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss GMT z'),
+            };
+
+            await setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true });
             console.log(`Transaction added: ${newOrderId} : ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
-        }).catch((error) => {
-            console.error(`step 1: Error adding transaction: ${error.message}`);
-            setErrorMessage(`Error adding transaction: ${error.message}`);
-            return;
-        });
 
-        // ------ 2. log cashflow entry
-        const newCfIdCount = portfolioContext.cashflowCount + 1;
-        const newCfId = `cf_${newCfIdCount.toString().padStart(6, '0')}`;
-        const cfYear = dayjs(tTime).tz().format('YYYY');
-        const cfSumDocRef = doc(db, `${portfolioContext.selectedPortPath}/cashflow_summary/${cfYear}`);
-        const newCashFlow: CashflowEntry = {
-            date: dayjs(tTime).tz().format('YYYY-MM-DD'),
-            type: 'in',
-            amount: totalCF,
-            balPrev: portfolioContext.cashBalance,
-            balAfter: portfolioContext.cashBalance + totalCF,
-            reason: 'sell',
-            timeStamp: tTime,
-            note: `Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`,
-            createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss z'),
-        };
-        setDoc(cfSumDocRef, { [newCfId]: newCashFlow }, { merge: true }).then(() => {
-            setSuccessMessage(`Order done! ${newOrderId}: Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
+            // ------ 2. log cashflow entry
+            const newCfIdCount = portfolioContext.cashflowCount + 1;
+            const newCfId = `cf_${newCfIdCount.toString().padStart(6, '0')}`;
+            const cfYear = dayjs(tTime).tz().format('YYYY');
+            const cfSumDocRef = doc(db, `${portfolioContext.selectedPortPath}/cashflow_summary/${cfYear}`);
+            const newCashFlow: CashflowEntry = {
+                date: dayjs(tTime).tz().format('YYYY-MM-DD'),
+                type: 'in',
+                amount: totalCF,
+                balPrev: portfolioContext.cashBalance,
+                balAfter: portfolioContext.cashBalance + totalCF,
+                reason: 'sell',
+                timeStamp: tTime,
+                note: `Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`,
+                createdAt: dayjs().tz().format('YYYY-MM-DD HH:mm:ss z'),
+            };
+
+            await setDoc(cfSumDocRef, { [newCfId]: newCashFlow }, { merge: true });
             console.log(`Cashflow added: (${newCfId}): +$${newCashFlow.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
-        }).catch((error) => {
-            console.error(`step 4: Error adding cashflow: ${error.message}`);
-            setErrorMessage(`Error adding cashflow: ${error.message}`);
-            return;
-        });
 
-        // ------ 3. update the asset allocation
-        const currentTickerPosition: SinglePosition = portfolioContext.currentPositions![selectedTicker];
-        const updatedAmount = currentTickerPosition.amount - amount;
-        const updatedTickerPosition: SinglePosition = {
-            ...currentTickerPosition,
-            amount: updatedAmount,
-            totalCost: currentTickerPosition.avgCost * updatedAmount,
-            marketPrice: price,
-            marketValue: updatedAmount * price,
-            pnl: (price - currentTickerPosition.avgCost) * updatedAmount,
-            pnlPct: ((price / currentTickerPosition.avgCost  - 1) * 100).toFixed(2) + '%',
-        }
-        const updatedPortPositions = portfolioContext.currentPositions!
-        if (updatedAmount <= 0) {
-            delete updatedPortPositions[selectedTicker];
-        } else {
-            updatedPortPositions[selectedTicker] = updatedTickerPosition;
-        }
+            // ------ 3. update the asset allocation
+            const currentTickerPosition: SinglePosition = portfolioContext.currentPositions![selectedTicker];
+            const updatedAmount = currentTickerPosition.amount - amount;
+            const updatedTickerPosition: SinglePosition = {
+                ...currentTickerPosition,
+                amount: updatedAmount,
+                totalCost: currentTickerPosition.avgCost * updatedAmount,
+                marketPrice: price,
+                marketValue: updatedAmount * price,
+                pnl: (price - currentTickerPosition.avgCost) * updatedAmount,
+                pnlPct: ((price / currentTickerPosition.avgCost - 1) * 100).toFixed(2) + '%',
+            };
 
-        setDoc(doc(db, portfolioSumDocPath), {
-            cashBalance: newCashFlow.balAfter,
-            cashflowCount: newCfIdCount,
-            transactionCount: newOrderCount,
-            currentPositions: updatedPortPositions,
-        }, { merge: true }).then(() => {
-            setSuccessMessage(`Order ${newOrderId} done successfully`);
+            const updatedPortPositions = { ...portfolioContext.currentPositions };
+            if (updatedAmount <= 0) {
+                delete updatedPortPositions[selectedTicker];
+            } else {
+                updatedPortPositions[selectedTicker] = updatedTickerPosition;
+            }
+
+            await setDoc(doc(db, portfolioSumDocPath), {
+                cashBalance: newCashFlow.balAfter,
+                cashflowCount: newCfIdCount,
+                transactionCount: newOrderCount,
+                currentPositions: updatedPortPositions,
+            }, { merge: true });
+
             console.log(`Position updated: ${selectedTicker} - ${updatedAmount} shares`);
-        }).catch((error) => {
-            console.error(`step 5: Error updating position: ${error.message}`);
-            setErrorMessage(`Error updating position: ${error.message}`);
-            return;
-        });
 
-        // ------ 4. call mtm update function to update the market price and summary figures
-        portfolioMtmUpdate();
+            // ------ 4. call mtm update function to update the market price and summary figures
+            await portfolioMtmUpdate();
+            
+            setSuccessMessage(`Order done! ${newOrderId}: Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
+
+        } catch (error: any) {
+            console.error(`Error processing sell order: ${error.message}`);
+            setErrorMessage(`Error processing sell order: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
-
-    function portfolioMtmUpdate() {
+    async function portfolioMtmUpdate() {
+        console.log('Updating portfolio market prices...');
         if (!portfolioContext || !portfolioContext.currentPositions) return;
+        
         const tickerList = Object.keys(portfolioContext.currentPositions);
-        if (tickerList.length === 0) { console.warn('No positions to update'); return; }
-        setIsLoading(true);
-        const mktPriceList = markToMarket(tickerList, dayjs().tz().format('YYYY-MM-DD'));
-        setIsLoading(false);
-        if (!mktPriceList) { console.log('Failed to update market prices'); return; }
-
-        const updatedPortPositions: { [key: string]: SinglePosition } = portfolioContext!.currentPositions
-        for (const ticker of tickerList) {
-            if (!(mktPriceList[ticker])) { console.warn(`No market price found for ${ticker}`); continue; }
-            const mktPrice = mktPriceList[ticker];
-            updatedPortPositions[ticker].marketPrice = mktPrice;
-            updatedPortPositions[ticker].marketValue = mktPrice * updatedPortPositions[ticker].amount;
-            updatedPortPositions[ticker].pnl = (mktPrice - updatedPortPositions[ticker].avgCost) * updatedPortPositions[ticker].amount;
-            updatedPortPositions[ticker].pnlPct = ((mktPrice / updatedPortPositions[ticker].avgCost - 1) * 100).toFixed(2) + '%'
+        if (tickerList.length === 0) { 
+            console.warn('No positions to update'); 
+            return; 
         }
-        const updatedPositionValue = Object.values(updatedPortPositions).reduce((acc, pos) => acc + pos.marketValue, 0);
-        const updatedNetWorth = portfolioContext.cashBalance + updatedPositionValue;
-        setDoc(doc(db, portfolioSumDocPath), {
-            positionValue: updatedPositionValue,
-            netWorth: updatedNetWorth,
-            currentPositions: updatedPortPositions,
-            mtmTimeStamp: dayjs().valueOf(),
-        }, { merge: true }).then(() => {
+
+        try {
+            const mktPriceList = await markToMarket(tickerList, dayjs().tz().format('YYYY-MM-DD'));
+            if (!mktPriceList) { 
+                console.log('Failed to update market prices'); 
+                return; 
+            }
+
+            const updatedPortPositions: { [key: string]: SinglePosition } = { ...portfolioContext.currentPositions };
+            
+            for (const ticker of tickerList) {
+                if (!(mktPriceList[ticker])) { 
+                    console.warn(`No market price found for ${ticker}`); 
+                    continue; 
+                }
+                const mktPrice = mktPriceList[ticker];
+                updatedPortPositions[ticker].marketPrice = mktPrice;
+                updatedPortPositions[ticker].marketValue = mktPrice * updatedPortPositions[ticker].amount;
+                updatedPortPositions[ticker].pnl = (mktPrice - updatedPortPositions[ticker].avgCost) * updatedPortPositions[ticker].amount;
+                updatedPortPositions[ticker].pnlPct = ((mktPrice / updatedPortPositions[ticker].avgCost - 1) * 100).toFixed(2) + '%';
+            }
+            
+            const updatedPositionValue = Object.values(updatedPortPositions).reduce((acc, pos) => acc + pos.marketValue, 0);
+            const updatedNetWorth = portfolioContext.cashBalance + updatedPositionValue;
+            
+            console.log(`Updated positions:`, updatedPortPositions);
+            
+            await setDoc(doc(db, portfolioSumDocPath), {
+                positionValue: updatedPositionValue,
+                netWorth: updatedNetWorth,
+                currentPositions: updatedPortPositions,
+                mtmTimeStamp: dayjs().valueOf(),
+            }, { merge: true });
+            
             console.log('Portfolio MTM update successful');
-        })
+            
+        } catch (error: any) {
+            console.error(`Error in portfolioMtmUpdate: ${error.message}`);
+            // Don't throw error - just log it so transaction doesn't fail
+        }
     }
 
 
@@ -306,26 +340,13 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         setCommission(0);
         setOtherFees(0);
         setNote('');
-        setTotalCF(0);
         props.onClose();
     }
-
-    // calculate the total cash flow, return the absolute value of the total cash flow
-    useEffect(() => {
-        switch (selectedType) {
-            case 'buy':
-                setTotalCF(amount * price + commission + otherFees);
-                break;
-            case 'sell':
-                setTotalCF(amount * price - commission - otherFees);
-                break;
-        }
-    }, [amount, price, commission, otherFees, selectedType]);
 
     // get reference mkt price and current position amount
     useEffect(() => {
         // set post request to get the ticker price
-        if (!portfolioContext || !selectedTicker) return;
+        if (!portfolioContext || !selectedTicker || assetClass !== 'stock') return;
         setIsLoading(true);
         if (auth.currentUser) {
             auth.currentUser.getIdToken().then((token) => {
@@ -347,13 +368,16 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
             });
         }
+    }, [tTime, assetClass, selectedTicker]);
+
+    useEffect(() => {
+        if (!portfolioContext || !selectedTicker || assetClass !== 'stock') return;
         if (portfolioContext.currentPositions && selectedTicker && portfolioContext.currentPositions[selectedTicker]) {
-            console.log(`Current position for ${selectedTicker}:`, portfolioContext.currentPositions[selectedTicker]);
             setCurrentTickerAmount(portfolioContext.currentPositions[selectedTicker].amount);
         } else {
             setCurrentTickerAmount(0);
         }
-    }, [tTime, selectedTicker, portfolioContext?.currentPositions]);
+    }, [portfolioContext, selectedTicker, assetClass]);
 
 
     return (
@@ -366,7 +390,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                             New Order
                         </Typography>
                         <Grid container spacing={2} my={2}>
-                            <Grid size={{ xs: 12 }}>            {/* time */}
+                            <Grid size={{ xs: 12, sm: 6 }}>            {/* time */}
                                 <FormControl fullWidth>
                                     <DateTimePicker
                                         label='Time'
@@ -378,6 +402,23 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                                             if (newValue) setTTime(newValue.valueOf())
                                         }}
                                     />
+                                </FormControl>
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>     {/* asset class */}
+                                <FormControl fullWidth>
+                                    <InputLabel> Asset Class</InputLabel>
+                                    <Select
+                                        fullWidth
+                                        label={'Asset Class'}
+                                        value={assetClass}
+                                        onChange={(e) => setAssetClass(e.target.value)}
+                                    >
+                                        {assetClassOptions.map((option) => (
+                                            <MenuItem key={option} value={option}>
+                                                {option}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
                                 </FormControl>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>     {/* type */}
@@ -398,18 +439,25 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                                 </FormControl>
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>     {/* ticker */}
-                                <Autocomplete
-                                    fullWidth
-                                    options={tickerOpts}
-                                    value={selectedTicker}
-                                    getOptionLabel={(option) => `${option} : ${stockList[option].longName}`}
-                                    renderInput={(params) => <TextField {...params} label="Ticker" />}
-                                    onChange={(event, newValue) => {
-                                        console.log(event);
-                                        if (newValue) setSelectedTicker(newValue);
-                                    }}
-                                />
-
+                                {assetClass === 'stock'
+                                    ? <Autocomplete
+                                        fullWidth
+                                        options={tickerOpts}
+                                        value={selectedTicker}
+                                        getOptionLabel={(option) => `${option} : ${stockList[option].longName}`}
+                                        renderInput={(params) => <TextField {...params} label="Ticker" />}
+                                        onChange={(event, newValue) => {
+                                            console.log(event);
+                                            if (newValue) setSelectedTicker(newValue);
+                                        }}
+                                    />
+                                    : <TextField
+                                        fullWidth
+                                        label="ISIN Code"
+                                        value={selectedTicker}
+                                        onChange={(e) => setSelectedTicker(e.target.value)}
+                                    />
+                                }
                             </Grid>
 
                             <Grid size={{ xs: 12, sm: 6 }}>     {/* amount */}
@@ -469,9 +517,10 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                                 <Typography variant="caption" color="text.secondary" align="center">
                                     {selectedType} {selectedTicker} @ ${price.toLocaleString('en-US')} x {amount}
                                     <ArrowRightAltIcon />
-                                    ${selectedType === 'buy'
-                                        ? - (amount * price + commission + otherFees).toLocaleString('en-US', { minimumFractionDigits: 2 })
-                                        : + (amount * price - commission - otherFees).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                    {selectedType === 'buy'
+                                        ? `-$${totalCF.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                                        : `+$${totalCF.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                                    }
                                 </Typography>
                             </Grid>
                             <Button
