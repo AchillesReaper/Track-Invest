@@ -29,7 +29,7 @@ export default function ChartPositionAllocation() {
 
         const tkrAllo = sortedPositions.map(([ticker, position]) => {
             colorPalet += 1;
-            return { ticker: ticker, value: position.marketValue, assetClass: position.assetClass, color: palette[colorPalet] }
+            return { label: position.ticker, ticker: ticker, value: position.marketValue, assetClass: position.assetClass, color: palette[colorPalet] }
         });
         console.log(tkrAllo);
 
