@@ -21,8 +21,8 @@ export default function TbCashFlow() {
         { field: 'date', headerName: 'Date', type: 'string', width: 100, headerAlign: 'left', align: 'left' },
         { field: 'type', headerName: 'Type', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
 
-        { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
         { field: 'bal_prev', headerName: 'Bal. Prev', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
+        { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
         { field: 'bal_after', headerName: 'Bal. After', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
 
         { field: 'reason', headerName: 'Reason', type: 'string', width: 100 },

@@ -54,7 +54,7 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
             netWorth: 0,
             cashflowCount: 0,
             transactionCount: 0,
-            mtmTimeStamp: dayjs().tz().valueOf(),
+            mtmTimeStamp: 0,
             currentPositions: {},
         }).then(() => {
             setInfoMessage(`Portfolio summary for ${portfolioName} created successfully`);

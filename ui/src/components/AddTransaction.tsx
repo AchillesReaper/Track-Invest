@@ -60,6 +60,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
+
     const cashflowColPath = `${portfolioContext?.selectedPortPath}/cashflow_summary`
     const transactionColPath = `${portfolioContext?.selectedPortPath}/transactions`
     const portfolioSumDocPath = `${portfolioContext?.selectedPortPath}/portfolio_summary/current`
@@ -163,7 +164,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                 cashflowCount: newCfIdCount,
                 transactionCount: newOrderCount,
                 currentPositions: {
-                    ...portfolioContext.currentPositions,
+                    // ...portfolioContext.currentPositions,
                     [selectedTicker]: updatedPosition,
                 },
             }, { merge: true });
@@ -171,15 +172,11 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             console.log(`Portfolio summary updated for order ${newOrderId}`);
 
             // ------ 4. call mark to market update function to update the market price and summary figures
-            await portfolioMtmUpdate(portfolioContext, dayjs(tTime).tz().format('YYYY-MM-DD'));
 
-            setSuccessMessage(`Order ${newOrderId} done successfully`);
 
         } catch (error: any) {
             console.error(`Error processing buy order: ${error.message}`);
             setErrorMessage(`Error processing buy order: ${error.message}`);
-        } finally {
-            setIsLoading(false);
         }
     }
 
@@ -191,12 +188,12 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         if (!selectedTicker) { setErrorMessage('Please select a ticker'); return; }
         if (amount <= 0 || price < 0) { setErrorMessage('Amount and Price must be greater than 0'); return; }
         if (amount > currentTickerAmount) { setErrorMessage(`Not enough shares to sell for ${selectedTicker}`); return; }
-        if (!portfolioContext) return;
+        if (!portfolioContext || !portfolioContext.currentPositions) return;
 
         try {
             setIsLoading(true);
             await createMonthlyStatementIfNeeded(portfolioContext, tTime);
-            
+
             // ------ 1. log transaction entry
             const newOrderCount = portfolioContext.transactionCount + 1;
             const newOrderId = `tx_${newOrderCount.toString().padStart(6, '0')}`;
@@ -218,7 +215,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             };
 
             await setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true });
-            console.log(`Transaction added: ${newOrderId} : ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
+            console.log(`Transaction added: ${newOrderId} : ${selectedType} ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
 
             // ------ 2. log cashflow entry
             const newCfIdCount = portfolioContext.cashflowCount + 1;
@@ -241,7 +238,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             console.log(`Cashflow added: (${newCfId}): +$${newCashFlow.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
 
             // ------ 3. update the asset allocation
-            const currentTickerPosition: SinglePosition = portfolioContext.currentPositions![selectedTicker];
+            const currentTickerPosition: SinglePosition = portfolioContext.currentPositions[selectedTicker];
             const updatedAmount = currentTickerPosition.amount - amount;
             const updatedTickerPosition: SinglePosition = {
                 ...currentTickerPosition,
@@ -253,7 +250,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                 pnlPct: ((price / currentTickerPosition.avgCost - 1) * 100).toFixed(2) + '%',
             };
 
-            const updatedPortPositions = { ...portfolioContext.currentPositions };
+            const updatedPortPositions = portfolioContext.currentPositions ;
             if (updatedAmount <= 0) {
                 delete updatedPortPositions[selectedTicker];
             } else {
@@ -270,15 +267,13 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             console.log(`Position updated: ${selectedTicker} - ${updatedAmount} shares`);
 
             // ------ 4. call mtm update function to update the market price and summary figures
-            await portfolioMtmUpdate(portfolioContext, dayjs(tTime).tz().format('YYYY-MM-DD'));
+            // await portfolioMtmUpdate(portfolioContext, dayjs(tTime).tz().format('YYYY-MM-DD'));
 
-            setSuccessMessage(`Order done! ${newOrderId}: Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
+            // setSuccessMessage(`Order done! ${newOrderId}: Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
 
         } catch (error: any) {
             console.error(`Error processing sell order: ${error.message}`);
             setErrorMessage(`Error processing sell order: ${error.message}`);
-        } finally {
-            setIsLoading(false);
         }
     }
 
@@ -295,6 +290,17 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         setNote('');
         props.onClose();
     }
+
+
+    // mtm after new transaction added
+    useEffect(() => {
+        if (!isLoading || !portfolioContext) return;
+        portfolioMtmUpdate(portfolioContext, dayjs(tTime).tz().format('YYYY-MM-DD')).then(() => {
+            setIsLoading(false);
+            console.log('Portfolio MTM updated successfully');
+            setSuccessMessage(`Order ${selectedType} ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount} completed successfully.`);
+        });
+    }, [portfolioContext]);
 
     // get reference mkt price and current position amount
     useEffect(() => {
@@ -348,20 +354,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                                     <DateTimePicker
                                         label='Time'
                                         value={dayjs(tTime)}
-
-                                        // shouldDisableTime={(time: Dayjs) => {
-                                        //     const isAfter: boolean = time.valueOf() > dayjs().endOf('day').valueOf();
-                                        //     let isBefore: boolean; // prevent logging cashflow in the past
-                                        //     if (!portfolioContext?.mtmTimeStamp) {
-                                        //         isBefore = false;
-                                        //     } else {
-                                        //         isBefore = time.valueOf() < portfolioContext.mtmTimeStamp;
-                                        //     }
-                                        //     return isBefore || isAfter;
-                                        // }}
-                                        shouldDisableTime={(time: Dayjs) => isDateTimeDisabled(time, portfolioContext?.mtmTimeStamp)}
                                         shouldDisableDate={(date: Dayjs) => isDateTimeDisabled(date, portfolioContext?.mtmTimeStamp)}
-
                                         onChange={(newValue) => {
                                             if (newValue) setTTime(newValue.valueOf())
                                         }}

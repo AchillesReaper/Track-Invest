@@ -14,6 +14,8 @@ export async function createMonthlyStatementIfNeeded(portfolioContext: Portfolio
         return;
     }
     const prevMonthEndTime = dayjs(portfolioContext.mtmTimeStamp).endOf('month').valueOf();
+    console.log(`Previous month end time: ${dayjs(prevMonthEndTime).tz().format('YYYY-MM-DD HH:mm:ss')}`);
+    console.log(`New transaction time: ${dayjs(newTscTime).tz().format('YYYY-MM-DD HH:mm:ss')}`);
     if (newTscTime < prevMonthEndTime) {
         console.log("New transaction time is before the last month end, no need to create a new monthly statement.");
         return;
@@ -94,7 +96,7 @@ export async function portfolioMtmUpdate(portfolioContext: PortfolioContextType,
             positionValue: updatedPositionValue,
             netWorth: updatedNetWorth,
             currentPositions: updatedPortPositions,
-            mtmTimeStamp: dayjs().valueOf(),
+            mtmTimeStamp: dayjs(cutOffTime, 'YYYY-MM-DD').valueOf(),
         }, { merge: true });
 
         console.log('Portfolio MTM update successful');
@@ -137,7 +139,7 @@ export function isDateTimeDisabled(dateTime: dayjs.Dayjs, mtmTimeStamp:number): 
     if (!mtmTimeStamp) {
         isBefore = false;
     } else {
-        isBefore = dateTime.valueOf() < mtmTimeStamp;
+        isBefore = dateTime.add(1, 'day').valueOf() < mtmTimeStamp;
     }
     return isBefore || isAfter;
 }

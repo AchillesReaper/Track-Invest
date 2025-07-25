@@ -1,5 +1,5 @@
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 
 import { Avatar, Box, Button, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
 import CurrencyExchangeOutlinedIcon from '@mui/icons-material/CurrencyExchangeOutlined';
@@ -29,8 +29,16 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     const typeOptions = ['in', 'out'];
     const [selectedType, setSelectedType] = useState<'in' | 'out'>('in');
     const [amount, setAmount] = useState<number>(0);
-    const [reasonOptions, setReasonOptions] = useState<string[]>([]);
     const [selectedReason, setSelectedReason] = useState<string>('');
+    const reasonOptions = useMemo(() => {
+        if (selectedType === 'in') {
+            setSelectedReason('cash in');
+            return ['cash in', 'sell', 'other'];
+        } else {
+            setSelectedReason('cash out');
+            return ['cash out', 'buy', 'other'];
+        }
+    }, [selectedType]);
     const [note, setNote] = useState<string>('');
 
     const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
@@ -87,7 +95,6 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         setCTime(dayjs().valueOf());
         setSelectedType('in');
         setAmount(0);
-        setSelectedReason('cash in');
         setNote('');
         setInfoMessage(undefined);
         setErrorMessage(undefined);
@@ -95,16 +102,6 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         setIsLoading(false);
         props.onClose();
     }
-
-    useEffect(() => {
-        if (selectedType === 'in') {
-            setReasonOptions(['cash in', 'sell', 'other']);
-            setSelectedReason('cash in');
-        } else {
-            setReasonOptions(['buy', 'cash out', 'other']);
-            setSelectedReason('buy');
-        }
-    }, [selectedType]);
 
     return (
         <Modal open={props.open} onClose={handleClose}>
@@ -120,18 +117,6 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                                 <DateTimePicker
                                     label='Time'
                                     value={dayjs(cTime)}
-                                    // shouldDisableTime={(time: Dayjs) => {
-                                    //     const isAfter: boolean = time.valueOf() > dayjs().endOf('day').valueOf();
-                                    //     let isBefore: boolean; // prevent logging cashflow in the past
-                                    //     if (!portfolioContext?.mtmTimeStamp) {
-                                    //         isBefore = false;
-                                    //     } else {
-                                    //         isBefore = time.valueOf() < portfolioContext.mtmTimeStamp;
-                                    //     }
-                                    //     return isBefore || isAfter;
-                                    // }}
-
-                                    shouldDisableTime={(time: Dayjs) => isDateTimeDisabled(time, portfolioContext!.mtmTimeStamp)}
                                     shouldDisableDate={(date: Dayjs) => isDateTimeDisabled(date, portfolioContext!.mtmTimeStamp)}
                                     onChange={(newValue) => {
                                         if (newValue) setCTime(newValue.valueOf())
