@@ -4,6 +4,7 @@ import Tab from '@mui/material/Tab';
 import TbPosition from './TablePosition';
 import TbTransaction from './TableTransaction';
 import TbCashFlow from './TableCashFlow';
+import { Grid } from '@mui/material';
 
 export default function DetailTables() {
     const [tableKey, setTableKey] = useState<string>('position');
@@ -28,19 +29,21 @@ export default function DetailTables() {
     };
 
     return (
-        <div className='mainRow3'>
-            <Tabs
-                value={tableKey}
-                onChange={handleChange}
-                variant='fullWidth'
-            >
-                <Tab value={"position"} label="position" />
-                <Tab value={"transaction"} label="transaction" />
-                <Tab value={"cashflow"} label="cashflow" />
-            </Tabs>
-            <div className="elementCardR2">
+        <Grid container spacing={0} sx={{ width: '100%' }}>
+            <Grid size={12}>
+                <Tabs
+                    value={tableKey}
+                    onChange={handleChange}
+                    variant='fullWidth'
+                >
+                    <Tab value={"position"} label="position" />
+                    <Tab value={"transaction"} label="transaction" />
+                    <Tab value={"cashflow"} label="cashflow" />
+                </Tabs>
+            </Grid>
+            <Grid size={12}>
                 {view}
-            </div>
-        </div>
+            </Grid>
+        </Grid>
     );
 }

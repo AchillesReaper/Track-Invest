@@ -2,7 +2,7 @@ import { DataGrid, Toolbar, type GridColDef } from "@mui/x-data-grid";
 import { useContext, useEffect, useState } from "react";
 
 import AddIcon from '@mui/icons-material/Add';
-import { Button, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import AddCashFlow from "./AddCashFlow";
 import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../utils/firebaseConfig";
@@ -37,8 +37,7 @@ export default function TbCashFlow() {
             <Toolbar>
                 <Typography variant="caption" component="div" sx={{ flexGrow: 1 }}>
                     {displayYear ? `Cashflow Summary for ${displayYear}` : 'Cashflow Summary'}
-                </Typography>
-                    
+                </Typography> 
                 <Button color="primary" startIcon={<AddIcon />} onClick={() => setOpenAddCF(true)}>
                     add cashflow
                 </Button>
@@ -78,7 +77,7 @@ export default function TbCashFlow() {
                     created_at: entry.createdAt,
                 });
             });
-            newRows.sort((a, b) => b.time_stamp - a.time_stamp); 
+            newRows.sort((a, b) => b.time_stamp - a.time_stamp);
             setTableRows(newRows);
         })
         return () => unsubscribe();
@@ -86,7 +85,7 @@ export default function TbCashFlow() {
 
 
     return (
-        <div>
+        <Box sx={{ maxWidth: '100vw', overflowX: 'auto' }}>
             <DataGrid
                 rows={tableRows}
                 columns={tableCol}
@@ -94,6 +93,6 @@ export default function TbCashFlow() {
                 showToolbar
             />
             <AddCashFlow open={openAddCF} onClose={() => setOpenAddCF(false)} />
-        </div>
+        </Box>
     );
 }

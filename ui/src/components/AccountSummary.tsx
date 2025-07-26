@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { PortfolioContext } from "../utils/contexts";
+import { Grid } from "@mui/material";
 
 export default function AccountSummary() {
     const portfolioContext = useContext(PortfolioContext);
@@ -15,13 +16,15 @@ export default function AccountSummary() {
         })
     }, [portfolioContext]);
     return (
-        <div className="mainRow1">
+        <Grid container spacing={2} justifyContent='space-between'>
             {accSummary && Object.entries(accSummary).map(([k, v]) =>
-                <div className="elementCardR1" key={k}>
-                    <span className="cardR1text1">{k}</span> <br />
-                    <span className="cardR1text2">${Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
+                <Grid size={{ xs: 6, md: 3 }} key={k}>
+                    <div className="R1Card">
+                        <span className="cardR1text1">{k}</span> <br />
+                        <span className="cardR1text2">${Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                </Grid>
             )}
-        </div>
+        </Grid>
     );
 }

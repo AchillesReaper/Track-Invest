@@ -2,7 +2,7 @@
 import { useContext, useState } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, Divider, Drawer, Grid, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, CssBaseline, Divider, Drawer, Grid, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 import { AccountCircle, Logout } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
@@ -27,20 +27,22 @@ export default function App() {
     const portList = appContext?.portList;
     const selectedPortfolio = appContext?.selectedPortfolio;
 
+    const drawerWidth = 250; // Define the width of the drawer
+
     // 1. ---------- set up the drawer list ----------
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
-    const drawerList =
-        <div className="w-[250px] h-full sticky" onClick={() => setDrawerOpen(false)}>
-            <AppBar position='sticky'>
-                <Toolbar variant="dense" >
-                    <IconButton color="inherit" onClick={() => setDrawerOpen(true)} >
-                        < AccountCircle />
-                    </IconButton>
-                    <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                        {auth.currentUser?.displayName || 'Guest'}
-                    </Typography>
-                </Toolbar>
-            </AppBar>
+    const drawerContext = (
+        <div >
+            <Toolbar sx={{ backgroundColor: '#1976d2', color: '#fff' }}>
+                <IconButton color="inherit" onClick={() => setDrawerOpen(true)} >
+                    < AccountCircle />
+                </IconButton>
+                <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
+                    {auth.currentUser?.displayName || 'Guest'}
+                </Typography>
+            </Toolbar>
+            <Divider />
+
             <List>
                 {portList && portList.map((port) => (
                     <ListItemButton
@@ -64,6 +66,7 @@ export default function App() {
                 </ListItemButton>
             </List>
         </div>
+    )
 
     // ---------- 2. functions ----------
     const handleLogOut = () => {
@@ -85,34 +88,72 @@ export default function App() {
         <>
             {isLoggedin
                 ?
-                <Box className='main' sx={{ minHeight: '100vh', display: 'flex' }}>
-                    {/* md view */}
-                    <Drawer anchor='left' variant='permanent' sx={{ display: { xs: 'none', md: 'block' }, width: 250 }} >
-                        {drawerList}
-                    </Drawer>
-                    {/* xs view */}
-                    <Drawer anchor='left' variant="temporary" sx={{ display: { md: 'none' } }} open={drawOpen} onClose={() => setDrawerOpen(false)}>
-                        {drawerList}
-                    </Drawer>
+                <Box sx={{ minHeight: '100vh', width: '100vw', display: 'flex' }}>
+                    <CssBaseline />
 
-                    <Box sx={{ flexGrow: 1, flexShrink: 1, display: 'flex', flexDirection: 'column' }}>
-                        <AppBar position='sticky'>
-                            <Toolbar variant="dense">
-                                <IconButton color="inherit" sx={{ display: { md: 'none' } }} onClick={() => setDrawerOpen(true)} >
-                                    <MenuIcon />
-                                </IconButton>
-                                <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                                    {selectedPortfolio}
-                                </Typography>
-                            </Toolbar>
-                        </AppBar>
-                        <Grid container spacing={2} sx={{ padding: 2, flexGrow: 1 }}>
+                    <AppBar
+                        position="fixed"
+                        sx={{
+                            width: { sm: `calc(100% - ${drawerWidth}px)` },
+                            ml: { sm: `${drawerWidth}px` },
+                        }}
+                    >
+                        <Toolbar>
+                            <IconButton color="inherit" sx={{ display: { md: 'none' } }} onClick={() => setDrawerOpen(true)} >
+                                <MenuIcon />
+                            </IconButton>
+                            <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
+                                {selectedPortfolio}
+                            </Typography>
+                        </Toolbar>
+                    </AppBar>
+
+                    <Box component="nav"
+                        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+
+                    >
+                        <Drawer
+                            variant="temporary"
+                            open={drawOpen}
+                            onClose={() => setDrawerOpen(false)}
+                            ModalProps={{
+                                keepMounted: true, // Better open performance on mobile.
+                            }}
+                            sx={{
+                                display: { xs: 'block', sm: 'none' },
+                                '& .MuiDrawer-paper': {
+                                    width: drawerWidth,
+                                },
+                            }}
+                        >
+                            {drawerContext}
+                        </Drawer>
+
+                        <Drawer
+                            variant="permanent"
+                            sx={{
+                                display: { xs: 'none', sm: 'block' },
+                                '& .MuiDrawer-paper': {
+                                    width: drawerWidth,
+                                    boxSizing: 'border-box',
+                                },
+                            }}
+                            open
+                        >
+                            {drawerContext}
+                        </Drawer>
+                    </Box>
+
+                    <Box component="main" className='main'
+                        sx={{ flexGrow: 1, px: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+                    >
+                        <Toolbar />
+                        <Divider />
+                        <Grid container spacing={2} sx={{ maxWidth: '100vw', py: 2 }}>
                             <Grid size={{ xs: 12 }}>
-                                {/* Account Summary */}
                                 <AccountSummary />
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
-                                {/* Chart Position Allocation */}
                                 <ChartPositionAllocation />
                             </Grid>
                             <Grid size={{ xs: 12, md: 8 }}>
@@ -122,6 +163,8 @@ export default function App() {
                                 <DetailTables />
                             </Grid>
                         </Grid>
+                        <AddNewPortfolio open={isAddNewPortfolio} onClose={() => SetIsAddNewPortfolio(false)} />
+
                     </Box>
                     <AddNewPortfolio open={isAddNewPortfolio} onClose={() => SetIsAddNewPortfolio(false)} />
                 </Box>

@@ -18,7 +18,11 @@ export default function ChartPnL() {
 
 
     useEffect(() => {
-        if (!portfolioContext || !portfolioContext.selectedPortPath) return;
+        if (!portfolioContext || !portfolioContext.selectedPortPath) {
+            setXAxisLabels(undefined);
+            setNetWorth(undefined);
+            return;
+        }
         // check if the displayYear is the year of the current portfolio
         const isCurrentYear = dayjs(portfolioContext?.mtmTimeStamp).format('YYYY') === displayYear;
         const xAxis: string[] = [];
@@ -34,22 +38,31 @@ export default function ChartPnL() {
                     mktValList.push(record.positionValue);
                 });
                 if (isCurrentYear) {
-                    // if the current year, add the current month
+                    // if the current year, add the current month`
                     xAxis.push(`current`);
                     netWorthList.push(portfolioContext.netWorth || 0);
                     mktValList.push(portfolioContext.positionValue || 0);
                 }
-                setXAxisLabels(xAxis);
-                setNetWorth(netWorthList);
-                setMktVal(mktValList);
             } else {
                 console.error('No data found for the selected year:', displayYear);
+                xAxis.push(`current`);
+                netWorthList.push(portfolioContext.netWorth || 0);
+                mktValList.push(portfolioContext.positionValue || 0);
             }
+        }).then(() => {
+            setXAxisLabels(xAxis);
+            setNetWorth(netWorthList);
+            setMktVal(mktValList);
+        }).catch((error) => {
+            console.error('Error fetching portfolio summary:', error)
+            setXAxisLabels(undefined);
+            setNetWorth(undefined);
+            setMktVal(undefined);
         });
     }, [portfolioContext, displayYear]);
 
     return (
-        <div className="elementCardR2">
+        <div className="R2Card">
             {xAxisLabels && mktVal && netWorth &&
                 <LineChart
                     height={300}

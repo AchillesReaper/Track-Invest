@@ -58,7 +58,7 @@ export default function ChartPositionAllocation() {
 
     }, [portfolioContext]);
 
-    const valueFormatter = (item: { value: number }) => `${(item.value/netWorth! * 100).toFixed(2)}%`;
+    const valueFormatter = (item: { value: number }) => `${(item.value / netWorth! * 100).toFixed(2)}%`;
 
 
     const setting = {
@@ -90,11 +90,12 @@ export default function ChartPositionAllocation() {
 
 
     return (
-        <div className="elementCardR2 md:grow-0">
-            {netWorth && assetClassAllocation && tickerAllocation ?
+        <div className="R2Card md:grow-0">
+            {netWorth && assetClassAllocation && tickerAllocation
+                ?
                 <PieChart  {...setting} />
                 :
-                <div className="flex-1"></div>
+                <div className="flex-1">no data to display</div>
             }
         </div>
     );

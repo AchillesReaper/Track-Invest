@@ -76,7 +76,13 @@ export default function AuthLogin() {
         })
     }
 
-
+    const btnStyle = {
+        maxWidth: '250px',
+        width: '100%',
+        display: 'block',
+        margin: 'auto',
+        my: 1
+    }
     return (
         <Box>
             <AppBar position='sticky'>
@@ -92,7 +98,7 @@ export default function AuthLogin() {
 
             {isSignUp && <AuthSignUp onClose={() => setIsSignUp(false)} />}
             {!isSignUp &&
-                <Box maxWidth="xs" sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', }} >
+                <Box maxWidth="xs" sx={{ marginTop: 4, marginX: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', }} >
                     <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
                         <LockOutlinedIcon />
                     </Avatar>
@@ -146,13 +152,13 @@ export default function AuthLogin() {
                                         if (e.key === 'Enter') { handleLogin() }
                                     }}
                                 />
-                                <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={handleLogin} >
+                                <Button variant="contained" sx={btnStyle} onClick={handleLogin} >
                                     login
                                 </Button>
-                                <Button variant='outlined' sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={() => { setIsSignUp(true); }}>
+                                <Button variant='outlined' sx={btnStyle} onClick={() => { setIsSignUp(true); }}>
                                     sign up
                                 </Button>
-                                <Button variant='outlined' sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={() => { setIsforgetPassword(true); }}>
+                                <Button variant='outlined' sx={btnStyle} onClick={() => { setIsforgetPassword(true); }}>
                                     forget password
                                 </Button>
                             </Box>

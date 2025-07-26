@@ -99,7 +99,7 @@ export default function TbTransaction() {
     }, [portfolioContext, portfolioContext?.selectedPortPath, displayMonth]);
 
     return (
-        <div>
+        <Box sx={{ maxWidth: '100vw', overflowX: 'auto' }}>
             <DataGrid
                 rows={tableRows}
                 columns={tableCol}
@@ -107,7 +107,7 @@ export default function TbTransaction() {
                 showToolbar
             />
             <AddTransaction open={openAddTsc} onClose={() => setOpenAddTsc(false)} />
-        </div>
+        </Box>
     );
 }
 

@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import type { GridPositionRowEntry } from "../utils/dataInterface";
 import { PortfolioContext } from "../utils/contexts";
+import { Box } from "@mui/material";
 
 export default function TbPosition() {
     const portfolioContext = useContext(PortfolioContext);
@@ -42,11 +43,12 @@ export default function TbPosition() {
 
 
     return (
-        <div>
+        <Box sx={{ maxWidth: '100vw', overflowX: 'auto' }}>
             <DataGrid
+                sx={{ width: '100%' }}
                 rows={tableRows}
                 columns={tableCol}
             />
-        </div>
+        </Box>
     );
 }
