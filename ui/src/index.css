@@ -70,7 +70,7 @@ h1 {
 
 
   .R1Card{
-    @apply bg-[#1a7d75e8] rounded-lg shadow-xl min-w-36 max-w-40 text-center;
+    @apply bg-[#1a7d75e8] rounded-lg shadow-xl min-w-36 max-w-40 text-center mx-auto;
   }
 
   .R2Card {

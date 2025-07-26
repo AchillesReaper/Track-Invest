@@ -16,7 +16,7 @@ export default function AccountSummary() {
         })
     }, [portfolioContext]);
     return (
-        <Grid container spacing={2} justifyContent='space-between'>
+        <Grid container spacing={2} >
             {accSummary && Object.entries(accSummary).map(([k, v]) =>
                 <Grid size={{ xs: 6, md: 3 }} key={k}>
                     <div className="R1Card">

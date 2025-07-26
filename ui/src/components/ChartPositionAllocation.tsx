@@ -85,6 +85,7 @@ export default function ChartPositionAllocation() {
             },
         ],
         height: 330,
+        // width: 300,
         hideLegend: true,
     } satisfies PieChartProps;
 

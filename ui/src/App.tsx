@@ -145,11 +145,11 @@ export default function App() {
                     </Box>
 
                     <Box component="main" className='main'
-                        sx={{ flexGrow: 1, px: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+                        sx={{ flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
                     >
                         <Toolbar />
                         <Divider />
-                        <Grid container spacing={2} sx={{ maxWidth: '100vw', py: 2 }}>
+                        <Grid container spacing={2} sx={{ maxWidth: '100vw', p: 2 }}>
                             <Grid size={{ xs: 12 }}>
                                 <AccountSummary />
                             </Grid>
