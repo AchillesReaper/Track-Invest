@@ -14,6 +14,7 @@ export default function ChartPnL() {
     const [xAxisLabels, setXAxisLabels] = useState<string[] | undefined>(undefined)
     const [netWorth, setNetWorth] = useState<number[] | undefined>(undefined)
     const [mktVal, setMktVal] = useState<number[] | undefined>(undefined);
+    const [cashBalance, setCashBalance] = useState<number[] | undefined>(undefined)
 
 
 
@@ -28,6 +29,7 @@ export default function ChartPnL() {
         const xAxis: string[] = [];
         const netWorthList: number[] = [];
         const mktValList: number[] = [];
+        const cashBalList: number[] = [];
         getDoc(doc(db, `${portfolioContext.selectedPortPath}/portfolio_summary/${displayYear}`)).then((docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data() as Record<string, PortfolioContextType>;
@@ -36,23 +38,27 @@ export default function ChartPnL() {
                     const record = data[recordMonth];
                     netWorthList.push(record.netWorth);
                     mktValList.push(record.positionValue);
+                    cashBalList.push(record.cashBalance);
                 });
                 if (isCurrentYear) {
                     // if the current year, add the current month`
                     xAxis.push(`current`);
                     netWorthList.push(portfolioContext.netWorth || 0);
                     mktValList.push(portfolioContext.positionValue || 0);
+                    cashBalList.push(portfolioContext.cashBalance || 0);
                 }
             } else {
                 console.error('No data found for the selected year:', displayYear);
                 xAxis.push(`current`);
                 netWorthList.push(portfolioContext.netWorth || 0);
                 mktValList.push(portfolioContext.positionValue || 0);
+                cashBalList.push(portfolioContext.cashBalance || 0);
             }
         }).then(() => {
             setXAxisLabels(xAxis);
             setNetWorth(netWorthList);
             setMktVal(mktValList);
+            setCashBalance(cashBalList);
         }).catch((error) => {
             console.error('Error fetching portfolio summary:', error)
             setXAxisLabels(undefined);
@@ -68,8 +74,9 @@ export default function ChartPnL() {
                     height={300}
                     grid={{ horizontal: true }}
                     series={[
-                        { data: mktVal, label: 'Market Value', yAxisId: 'leftAxisId' },
-                        { data: netWorth, label: 'Net Worth', yAxisId: 'leftAxisId' },
+                        { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId' },
+                        { data: mktVal, label: 'Market Value', yAxisId: 'rightAxisId' },
+                        { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId' },
                     ]}
                     xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
                     yAxis={[
@@ -78,11 +85,11 @@ export default function ChartPnL() {
                             position: 'left',
                             valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`,
                         },
-                        // {
-                        //     id: 'leftAxisId',
-                        //     position: 'right',
-                        //     valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
-                        // },
+                        {
+                            id: 'rightAxisId',
+                            position: 'right',
+                            valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
+                        },
                     ]}
                 />
             }
