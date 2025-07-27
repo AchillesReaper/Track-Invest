@@ -50,8 +50,8 @@ export default function ChartPositionAllocation() {
         }, [] as Array<{ label: string, value: number, color: string, assetClass: string }>);
         assAllo.push({ label: 'Cash', assetClass: 'cash', value: cashBalance, color: palette[colorPalet + 1] });
         tkrAllo.push({ label: 'Cash', ticker: 'cash', value: cashBalance, assetClass: 'cash', color: palette[colorPalet + 1] });
-        console.log('assAllo', assAllo);
-        console.log('tkrAllo', tkrAllo);
+        // console.log('assAllo', assAllo);
+        // console.log('tkrAllo', tkrAllo);
 
         setAssetClassAllocation(assAllo);
         setTickerAllocation(tkrAllo);

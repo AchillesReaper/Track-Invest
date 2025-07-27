@@ -249,21 +249,22 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                 pnl: (price - currentTickerPosition.avgCost) * updatedAmount,
                 pnlPct: ((price / currentTickerPosition.avgCost - 1) * 100).toFixed(2) + '%',
             };
-
+            console.log(`updated amount for ${selectedTicker}: ${updatedAmount}`);
             const updatedPortPositions = portfolioContext.currentPositions;
             if (updatedAmount <= 0) {
                 delete updatedPortPositions[selectedTicker];
             } else {
                 updatedPortPositions[selectedTicker] = updatedTickerPosition;
             }
-            // console.log(`updatedPortPositions:`, updatedPortPositions);
+            console.log(`updatedPortPositions:`, updatedPortPositions);
 
             await setDoc(doc(db, portfolioSumDocPath), {
+                ...portfolioContext,
                 cashBalance: newCashFlow.balAfter,
                 cashflowCount: newCfIdCount,
                 transactionCount: newOrderCount,
                 currentPositions: updatedPortPositions,
-            }, { merge: true });
+            });
 
             console.log(`Position updated: ${selectedTicker} - ${updatedAmount} shares`);
 
@@ -297,7 +298,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     useEffect(() => {
         if (!isLoading || !portfolioContext) return;
         portfolioMtmUpdate(
-            portfolioContext, 
+            portfolioContext,
             dayjs(tTime).tz().format('YYYY-MM-DD'),
             price
         ).then(() => {
