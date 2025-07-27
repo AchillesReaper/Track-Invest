@@ -17,7 +17,7 @@ export default function TbCashFlow() {
 
     const [tableRows, setTableRows] = useState<GridCashflowRowEntry[]>([]); // Replace 'any' with your specific type if available
     const tableCol: GridColDef[] = [
-        // { field: 'id', headerName: 'ID', type: 'string', width: 150 },
+        { field: 'id', headerName: 'ID', type: 'string', width: 150 },
         { field: 'date', headerName: 'Date', type: 'string', width: 100, headerAlign: 'left', align: 'left' },
         { field: 'type', headerName: 'Type', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
 
@@ -26,9 +26,9 @@ export default function TbCashFlow() {
         { field: 'bal_after', headerName: 'Bal. After', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
 
         { field: 'reason', headerName: 'Reason', type: 'string', width: 100 },
-        // { field: 'time_stamp', headerName: 'Timestamp', type: 'number', width: 150, headerAlign: 'center', align: 'center' },
-        { field: 'note', headerName: 'Note', type: 'string', width: 200 },
-        { field: 'created_at', headerName: 'Created At', type: 'string', width: 200 }
+        { field: 'note', headerName: 'Note', type: 'string', width: 400 },
+        { field: 'created_at', headerName: 'Created At', type: 'string', width: 200 },
+        { field: 'time_stamp', headerName: 'Time Stamp', type: 'number', width: 150, headerAlign: 'center', align: 'center' },
     ];
 
 
@@ -91,6 +91,10 @@ export default function TbCashFlow() {
                 columns={tableCol}
                 slots={{ toolbar: CustomToolbar }}
                 showToolbar
+                columnVisibilityModel={{ id: false }}
+                sortModel={[
+                    { field: 'time_stamp', sort: 'desc' } // Sort by timestamp in descending order
+                ]}
             />
             <AddCashFlow open={openAddCF} onClose={() => setOpenAddCF(false)} />
         </Box>

@@ -17,6 +17,7 @@ export default function TbPosition() {
         { field: 'marketValue', headerName: 'Mkt Value', type: 'number', width: 100 },
         { field: 'pnl', headerName: 'P/L', type: 'number', width: 100 },
         { field: 'pnlPct', headerName: 'P/L %', type: 'string', width: 100, headerAlign: 'right', align: 'right' },
+        { field: 'assetClass', headerName: 'Asset Class', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
     ]
 
     useEffect(() => {
@@ -48,6 +49,7 @@ export default function TbPosition() {
                 sx={{ width: '100%' }}
                 rows={tableRows}
                 columns={tableCol}
+                sortModel={[{ field: 'assetClass', sort: 'asc' }]} // Sort by asset class in ascending order
             />
         </Box>
     );

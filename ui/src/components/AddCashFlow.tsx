@@ -109,7 +109,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                 <Box sx={styleMainColBox}>
                     <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}> <CurrencyExchangeOutlinedIcon /> </Avatar>
                     <Typography component="h1" variant="h5">
-                        Add New Portfolio
+                        New Cashflow
                     </Typography>
                     <Grid container spacing={2} my={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>

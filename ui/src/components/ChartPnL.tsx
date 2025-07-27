@@ -69,7 +69,7 @@ export default function ChartPnL() {
                     grid={{ horizontal: true }}
                     series={[
                         { data: mktVal, label: 'Market Value', yAxisId: 'leftAxisId' },
-                        { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId' },
+                        { data: netWorth, label: 'Net Worth', yAxisId: 'leftAxisId' },
                     ]}
                     xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
                     yAxis={[
@@ -78,11 +78,11 @@ export default function ChartPnL() {
                             position: 'left',
                             valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`,
                         },
-                        {
-                            id: 'rightAxisId',
-                            position: 'right',
-                            valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
-                        },
+                        // {
+                        //     id: 'leftAxisId',
+                        //     position: 'right',
+                        //     valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
+                        // },
                     ]}
                 />
             }
