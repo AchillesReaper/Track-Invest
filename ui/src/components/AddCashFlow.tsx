@@ -1,5 +1,5 @@
 
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 
 import { Avatar, Box, Button, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
 import CurrencyExchangeOutlinedIcon from '@mui/icons-material/CurrencyExchangeOutlined';
@@ -16,7 +16,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { PortfolioContext } from "../utils/contexts";
-import { createMonthlyStatementIfNeeded, isDateTimeDisabled } from "../utils/monthlyPortfolioSummary";
+import { createMonthlyStatementIfNeeded, isDateTimeDisabled, portfolioMtmUpdate } from "../utils/monthlyPortfolioSummary";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault("Australia/Sydney");
@@ -81,13 +81,10 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                 mtmTimeStamp: cTime,
             }, { merge: true }).then(() => {
                 console.log(`addCashFlow: ${cfID} added successfully`);
-                setSuccessMessage(`Cash flow ${cfID} added successfully`);
             })
         } catch (error: any) {
             console.error(`addCashFlow: ${error.message}`);
             setErrorMessage(`Failed to add cash flow: ${error.message}`);
-        } finally {
-            setIsLoading(false);
         }
     }
 
@@ -102,6 +99,16 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         setIsLoading(false);
         props.onClose();
     }
+
+    useEffect(() => {
+        if (!portfolioContext || !isLoading) return;
+        portfolioMtmUpdate(portfolioContext, dayjs(cTime + 1).tz().format('YYYY-MM-DD')).then(() => {
+            console.log('Portfolio MTM update completed');
+            setSuccessMessage(`Cashflow: ${selectedType} $${amount} for ${selectedReason} added successfully`);
+        }).catch((error) => {
+            console.error(`Error in portfolio MTM update: ${error.message}`);
+        });
+    },[portfolioContext]);
 
     return (
         <Modal open={props.open} onClose={handleClose}>

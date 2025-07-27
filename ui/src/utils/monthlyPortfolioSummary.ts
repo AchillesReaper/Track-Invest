@@ -67,11 +67,12 @@ export async function portfolioMtmUpdate(portfolioContext: PortfolioContextType,
     }
 
     try {
-        const mktPriceList = await markToMarket(tickerList, cutOffTime);
-        if (!mktPriceList) {
+        const mktPriceData = await markToMarket(tickerList, cutOffTime);
+        if (!mktPriceData) {
             console.log('Failed to update market prices');
             return;
         }
+        const mktPriceList = mktPriceData.data;
 
         const updatedPortPositions: { [key: string]: SinglePosition } = { ...portfolioContext.currentPositions };
 

@@ -4,7 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import AddIcon from '@mui/icons-material/Add';
 import { Box, Button, Typography } from "@mui/material";
 import AddCashFlow from "./AddCashFlow";
-import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, limit, onSnapshot, orderBy, query, Timestamp } from "firebase/firestore";
 import { db } from "../utils/firebaseConfig";
 import { PortfolioContext } from "../utils/contexts";
 import type { GridCashflowRowEntry } from "../utils/dataInterface";
@@ -21,14 +21,14 @@ export default function TbCashFlow() {
         { field: 'date', headerName: 'Date', type: 'string', width: 100, headerAlign: 'left', align: 'left' },
         { field: 'type', headerName: 'Type', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
 
-        { field: 'bal_prev', headerName: 'Bal. Prev', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
+        { field: 'balPrev', headerName: 'Bal. Prev', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
         { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'bal_after', headerName: 'Bal. After', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
+        { field: 'balAfter', headerName: 'Bal. After', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
 
         { field: 'reason', headerName: 'Reason', type: 'string', width: 100 },
         { field: 'note', headerName: 'Note', type: 'string', width: 400 },
-        { field: 'created_at', headerName: 'Created At', type: 'string', width: 200 },
-        { field: 'time_stamp', headerName: 'Time Stamp', type: 'number', width: 150, headerAlign: 'center', align: 'center' },
+        { field: 'createdAt', headerName: 'Created At', type: 'string', width: 200 },
+        { field: 'timeStamp', headerName: 'Time Stamp', type: 'number', width: 150, headerAlign: 'center', align: 'center' },
     ];
 
 
@@ -69,15 +69,15 @@ export default function TbCashFlow() {
                     date: entry.date,
                     type: entry.type,
                     amount: entry.amount,
-                    bal_prev: entry.balPrev,
-                    bal_after: entry.balAfter,
+                    balPrev: entry.balPrev,
+                    balAfter: entry.balAfter,
                     reason: entry.reason,
-                    time_stamp: entry.timeStamp,
+                    timeStamp: entry.timeStamp,
                     note: entry.note,
-                    created_at: entry.createdAt,
+                    createdAt: entry.createdAt,
                 });
             });
-            newRows.sort((a, b) => b.time_stamp - a.time_stamp);
+            newRows.sort((a, b) => b.timeStamp - a.timeStamp);
             setTableRows(newRows);
         })
         return () => unsubscribe();
@@ -91,9 +91,9 @@ export default function TbCashFlow() {
                 columns={tableCol}
                 slots={{ toolbar: CustomToolbar }}
                 showToolbar
-                columnVisibilityModel={{ id: false }}
+                columnVisibilityModel={{ id: false, timeStamp: false }}
                 sortModel={[
-                    { field: 'time_stamp', sort: 'desc' } // Sort by timestamp in descending order
+                    { field: 'timeStamp', sort: 'desc' } // Sort by timestamp in descending order
                 ]}
             />
             <AddCashFlow open={openAddCF} onClose={() => setOpenAddCF(false)} />
