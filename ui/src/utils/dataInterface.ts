@@ -115,6 +115,7 @@ export interface SinglePosition {
 
 export interface GridPositionRowEntry {
     id: string,  // Unique identifier for each row -> same as ticker
+    assetClass: string, // e.g. 'stock', 'bond', 'fund', 'crypto'
     avgCost: number,
     totalCost: number,
     amount: number,

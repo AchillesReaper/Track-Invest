@@ -30,6 +30,7 @@ export default function TbPosition() {
         }
         const rows: GridPositionRowEntry[] = Object.entries(currentPositions).map(([ticker, position]) => ({
             id: ticker,
+            assetClass: position.assetClass,
             amount: position.amount,
             avgCost: position.avgCost,
             totalCost: position.totalCost,

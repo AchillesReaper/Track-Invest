@@ -71,7 +71,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         // 3. update stock position in `portfolioContext.selectedPortPath/position_summary/current`
         // 4. mark to market the portfolio
         if (!selectedTicker) { setErrorMessage('Please select a ticker'); return; }
-        if (amount <= 0 || price <= 0) { setErrorMessage('Amount and Price must be greater than 0'); return; }
+        if (amount <= 0 || price < 0) { setErrorMessage('Amount and Price must be greater than 0'); return; }
         if (!portfolioContext || !portfolioContext.selectedPortPath) return;
 
         // ------ 1. if there is enough cash balance -> deduct cash balance
