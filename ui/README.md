@@ -1,69 +1,58 @@
-# React + TypeScript + Vite
+draft a readme file to describe how this app work
+1. this app provide historical price reference for stock listed in NYSE and Nasdaq
+2. user can build as many portfolio as needed to track their investment or simulate their strategies
+3. user need to log the deposit/withdraw and trade order in chonological order
+4. logging a trade order will generate a corresponing cashflow entry automatically
+5. although no reference price data, user still can log the investment in other asset like bond to show the portfolio allocation.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Track-Invest UI
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Track-Invest is a web application designed to help users track and simulate investment portfolios with historical price references for stocks listed on NYSE and Nasdaq. The app is ideal for both real investment tracking and strategy simulation.
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. **Historical Price Reference**  
+   The app provides historical price data for stocks listed on NYSE and Nasdaq, allowing users to make informed decisions and analyze past performance.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2. **Multiple Portfolios**  
+   Users can create and manage as many portfolios as they need. This flexibility supports tracking real investments or simulating different investment strategies side by side.
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+3. **Chronological Logging**  
+   All deposits, withdrawals, and trade orders must be logged in chronological order. This ensures the accuracy of portfolio performance and cash flow calculations.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+4. **Automatic Cashflow Entries**  
+   When a trade order is logged, the app automatically generates the corresponding cashflow entry. This reduces manual work and helps maintain accurate records.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+5. **Support for Other Assets**  
+   Although no reference price data is provided, users can still log investments in other assets like bonds to show the overall portfolio allocation.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## How It Works
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Portfolio Management:**  
+  After signing in, users can create new portfolios or select existing ones. Each portfolio maintains its own transaction and cashflow history.
+
+- **Logging Transactions:**  
+  Users must log every deposit, withdrawal, and trade order in the order they occurred. The system enforces this to maintain data integrity.
+
+- **Trade Orders:**  
+  When a trade order (buy or sell) is entered, the app automatically updates the portfolio’s positions and generates a matching cashflow entry.
+
+- **Historical Analysis:**  
+  Users can review historical prices and portfolio performance over time, leveraging the app’s built-in data and reporting tools.
+
+## Getting Started
+
+1. Sign up or log in to your account. You may login with your Google account directly.
+2. Create a new portfolio or select an existing one.
+3. Log your deposits, withdrawals, and trade orders as they happen.
+4. Review your portfolio’s performance and cashflow summaries.
+
+## Notes
+
+- Ensure all transactions are logged in the correct chronological order for accurate tracking.
+- The app is designed for educational and personal finance tracking purposes.
+
+---
+For more details or support, please refer to the in-app help or contact the developer.

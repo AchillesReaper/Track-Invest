@@ -25,3 +25,5 @@ dist-ssr
 
 src/components/ZDummyDB.ts
 src/utils/firebaseConfigDetails.ts
+
+README_draft_prompt
