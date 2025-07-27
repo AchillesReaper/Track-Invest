@@ -250,7 +250,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                 pnlPct: ((price / currentTickerPosition.avgCost - 1) * 100).toFixed(2) + '%',
             };
 
-            const updatedPortPositions = portfolioContext.currentPositions ;
+            const updatedPortPositions = portfolioContext.currentPositions;
             if (updatedAmount <= 0) {
                 delete updatedPortPositions[selectedTicker];
             } else {
@@ -331,13 +331,13 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     }, [tTime, assetClass, selectedTicker]);
 
     useEffect(() => {
-        if (!portfolioContext || !selectedTicker || assetClass !== 'stock') return;
-        if (portfolioContext.currentPositions && selectedTicker && portfolioContext.currentPositions[selectedTicker]) {
-            setCurrentTickerAmount(portfolioContext.currentPositions[selectedTicker].amount);
+        if (!portfolioContext || !selectedTicker) return;
+        if (portfolioContext.currentPositions && portfolioContext.currentPositions?.[selectedTicker]) {
+            setCurrentTickerAmount(portfolioContext.currentPositions?.[selectedTicker].amount);
         } else {
             setCurrentTickerAmount(0);
         }
-    }, [portfolioContext, selectedTicker, assetClass]);
+    }, [portfolioContext, selectedTicker]);
 
 
     return (
