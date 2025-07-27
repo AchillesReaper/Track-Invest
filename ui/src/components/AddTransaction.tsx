@@ -296,7 +296,11 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     // mtm after new transaction added
     useEffect(() => {
         if (!isLoading || !portfolioContext) return;
-        portfolioMtmUpdate(portfolioContext, dayjs(tTime).tz().format('YYYY-MM-DD')).then(() => {
+        portfolioMtmUpdate(
+            portfolioContext, 
+            dayjs(tTime).tz().format('YYYY-MM-DD'),
+            price
+        ).then(() => {
             setIsLoading(false);
             console.log('Portfolio MTM updated successfully');
             setSuccessMessage(`Order ${selectedType} ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount} completed successfully.`);

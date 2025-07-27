@@ -74,7 +74,7 @@ export interface TransactionEntry {
     commission: number,
     otherFees: number,
     totalCost: number,
-    note?: string,
+    note: string,
     createdAt?: string,
 }
 
@@ -88,6 +88,8 @@ export interface GridTransactionRowEntry {
     commission: number,
     otherFees: number,
     totalCost: number,
+    note: string,
+    createdAt: string,
 }
 
 

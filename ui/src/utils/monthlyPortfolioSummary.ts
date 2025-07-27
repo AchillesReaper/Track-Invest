@@ -55,7 +55,11 @@ export async function createMonthlyStatementIfNeeded(portfolioContext: Portfolio
 }
 
 
-export async function portfolioMtmUpdate(portfolioContext: PortfolioContextType, cutOffTime: string = dayjs().tz().format('YYYY-MM-DD')): Promise<void> {
+export async function portfolioMtmUpdate(
+    portfolioContext: PortfolioContextType, 
+    cutOffTime: string = dayjs().tz().format('YYYY-MM-DD'),
+    newOrderPrice: number = 0
+): Promise<void> {
     console.log('Updating portfolio market prices...');
     if (!portfolioContext || !portfolioContext.currentPositions) return;
     const portfolioSumDocPath = `${portfolioContext.selectedPortPath}/portfolio_summary/current`;
@@ -81,7 +85,7 @@ export async function portfolioMtmUpdate(portfolioContext: PortfolioContextType,
                 console.warn(`No market price found for ${ticker}`);
                 continue;
             }
-            const mktPrice = mktPriceList[ticker];
+            let mktPrice:number = mktPriceList[ticker] || newOrderPrice;
             updatedPortPositions[ticker].marketPrice = mktPrice;
             updatedPortPositions[ticker].marketValue = mktPrice * updatedPortPositions[ticker].amount;
             updatedPortPositions[ticker].pnl = (mktPrice - updatedPortPositions[ticker].avgCost) * updatedPortPositions[ticker].amount;

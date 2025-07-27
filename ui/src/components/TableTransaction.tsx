@@ -28,6 +28,7 @@ export default function TbTransaction() {
         { field: 'commission', headerName: 'Commission', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
         { field: 'otherFees', headerName: 'Other Fees', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
         { field: 'totalCost', headerName: 'Total Cost', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
+        { field: 'note', headerName: 'Note', type: 'string', width: 400 },
     ];
 
     function CustomToolbar() {
@@ -87,6 +88,8 @@ export default function TbTransaction() {
                 commission: tscDetail.commission,
                 otherFees: tscDetail.otherFees,
                 totalCost: tscDetail.totalCost,
+                note: tscDetail.note,
+                createdAt: tscDetail.createdAt,
             } as GridTransactionRowEntry));
             console.log('Transaction summary:', rows);
             setTableRows(rows);
