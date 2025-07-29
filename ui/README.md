@@ -1,10 +1,3 @@
-draft a readme file to describe how this app work
-1. this app provide historical price reference for stock listed in NYSE and Nasdaq
-2. user can build as many portfolio as needed to track their investment or simulate their strategies
-3. user need to log the deposit/withdraw and trade order in chonological order
-4. logging a trade order will generate a corresponing cashflow entry automatically
-5. although no reference price data, user still can log the investment in other asset like bond to show the portfolio allocation.
-
 # Track-Invest UI
 
 ## Overview

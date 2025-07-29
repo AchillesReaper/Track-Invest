@@ -15,6 +15,7 @@ export default function ChartPnL() {
     const [netWorth, setNetWorth] = useState<number[] | undefined>(undefined)
     const [mktVal, setMktVal] = useState<number[] | undefined>(undefined);
     const [cashBalance, setCashBalance] = useState<number[] | undefined>(undefined)
+    const [selfCapital, setSelfCapital] = useState<number[] | undefined>(undefined);
 
 
 
@@ -30,6 +31,7 @@ export default function ChartPnL() {
         const netWorthList: number[] = [];
         const mktValList: number[] = [];
         const cashBalList: number[] = [];
+        const selfCapList: number[] = [];
         getDoc(doc(db, `${portfolioContext.selectedPortPath}/portfolio_summary/${displayYear}`)).then((docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data() as Record<string, PortfolioContextType>;
@@ -39,6 +41,7 @@ export default function ChartPnL() {
                     netWorthList.push(record.netWorth);
                     mktValList.push(record.positionValue);
                     cashBalList.push(record.cashBalance);
+                    selfCapList.push(record.selfCapital);
                 });
                 if (isCurrentYear) {
                     // if the current year, add the current month`
@@ -46,6 +49,7 @@ export default function ChartPnL() {
                     netWorthList.push(portfolioContext.netWorth || 0);
                     mktValList.push(portfolioContext.positionValue || 0);
                     cashBalList.push(portfolioContext.cashBalance || 0);
+                    selfCapList.push(portfolioContext.selfCapital || 0);
                 }
             } else {
                 console.error('No data found for the selected year:', displayYear);
@@ -53,17 +57,21 @@ export default function ChartPnL() {
                 netWorthList.push(portfolioContext.netWorth || 0);
                 mktValList.push(portfolioContext.positionValue || 0);
                 cashBalList.push(portfolioContext.cashBalance || 0);
+                selfCapList.push(portfolioContext.selfCapital || 0);
             }
         }).then(() => {
             setXAxisLabels(xAxis);
             setNetWorth(netWorthList);
             setMktVal(mktValList);
             setCashBalance(cashBalList);
+            setSelfCapital(selfCapList);
         }).catch((error) => {
             console.error('Error fetching portfolio summary:', error)
             setXAxisLabels(undefined);
             setNetWorth(undefined);
             setMktVal(undefined);
+            setCashBalance(undefined);
+            setSelfCapital(undefined);
         });
     }, [portfolioContext, displayYear]);
 
@@ -77,6 +85,7 @@ export default function ChartPnL() {
                         { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId' },
                         { data: mktVal, label: 'Market Value', yAxisId: 'rightAxisId' },
                         { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId' },
+                        { data: selfCapital, label: 'Self Capital', yAxisId: 'leftAxisId' },
                     ]}
                     xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
                     yAxis={[

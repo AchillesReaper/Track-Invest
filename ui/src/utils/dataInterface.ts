@@ -22,6 +22,7 @@ export interface PortfolioContextType {
     marginBalance: number,
     positionValue: number,
     netWorth: number,
+    selfCapital:number
     cashflowCount: number,
     transactionCount: number,
     mtmTimeStamp: number,   // used to prevent logging trade/cashflow in the past

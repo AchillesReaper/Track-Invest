@@ -33,10 +33,10 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     const reasonOptions = useMemo(() => {
         if (selectedType === 'in') {
             setSelectedReason('cash in');
-            return ['cash in', 'sell', 'other'];
+            return ['cash in', 'other'];
         } else {
             setSelectedReason('cash out');
-            return ['cash out', 'buy', 'other'];
+            return ['cash out', 'other'];
         }
     }, [selectedType]);
     const [note, setNote] = useState<string>('');
@@ -74,12 +74,27 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
 
             await setDoc(cfSumDocRef, { [cfID]: newCashFlow }, { merge: true })
 
-            await setDoc(portSumDocRef, {
+            let updatedSelfCapital = portfolioContext.selfCapital;
+            switch (selectedReason){
+                case 'cash in':
+                    console.log(`cash in, amount: `, amount);
+                    updatedSelfCapital += amount;
+                    break;
+                case 'cash out':
+                    console.log(`cash out, amount: `, amount);
+                    updatedSelfCapital -= amount;
+                    break;
+            }
+
+            const updateContent = {
                 cashflowCount: newIdCount,
                 cashBalance: newCashFlow.balAfter,
                 netWorth: newCashFlow.balAfter + portfolioContext.positionValue,
+                selfCapital: updatedSelfCapital,
                 mtmTimeStamp: cTime,
-            }, { merge: true }).then(() => {
+            }
+
+            await setDoc(portSumDocRef, updateContent, { merge: true }).then(() => {
                 console.log(`addCashFlow: ${cfID} added successfully`);
             })
         } catch (error: any) {
@@ -100,6 +115,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         props.onClose();
     }
 
+    // use isLoading to control if market-to-market update is needed
     useEffect(() => {
         if (!portfolioContext || !isLoading) return;
         portfolioMtmUpdate(portfolioContext, dayjs(cTime + 1).tz().format('YYYY-MM-DD')).then(() => {

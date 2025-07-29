@@ -140,6 +140,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
     const [cashBalance, setCashBalance] = useState<number>(0);
     const [marginBalance, setMarginBalance] = useState<number>(0);
     const [positionValue, setPositionValue] = useState<number>(0);
+    const [selfCapital, setSelfCapital] = useState<number>(0);
     const [netWorth, setNetWorth] = useState<number>(0);
     const [cashflowCount, setCashflowCount] = useState<number>(0);
     const [transactionCount, setTransactionCount] = useState<number>(0);
@@ -165,6 +166,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             setMarginBalance(0);
             setPositionValue(0);
             setNetWorth(0);
+            setSelfCapital(0);
             setCashflowCount(0);
             setTransactionCount(0);
             setMtmTime(dayjs().valueOf());
@@ -185,6 +187,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
                     setMarginBalance(data.marginBalance);
                     setPositionValue(data.positionValue);
                     setNetWorth(data.netWorth);
+                    setSelfCapital(data.selfCapital);
                     setCashflowCount(data.cashflowCount || 0);
                     setTransactionCount(data.transactionCount || 0);
                     setMtmTime(data.mtmTimeStamp || 0);
@@ -220,6 +223,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             marginBalance: marginBalance,
             positionValue: positionValue,
             netWorth: netWorth,
+            selfCapital: selfCapital,
             cashflowCount: cashflowCount,
             transactionCount: transactionCount,
             mtmTimeStamp: mtmTime,
