@@ -280,9 +280,8 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     }
 
 
-    function cleanUpOnClose() {
+    function handleClose() {
         setSelectedTicker(undefined);
-        setTTime(dayjs().valueOf());
         setAmount(0);
         setCurrentTickerAmount(0);
         setPrice(0);
@@ -290,6 +289,10 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         setCommission(0);
         setOtherFees(0);
         setNote('');
+        setSuccessMessage(undefined);
+        setErrorMessage(undefined);
+        setInfoMessage(undefined);
+        setIsLoading(false);
         props.onClose();
     }
 
@@ -346,7 +349,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
 
     return (
-        <Modal open={props.open} onClose={cleanUpOnClose}>
+        <Modal open={props.open} onClose={handleClose}>
             <Box sx={styleModalBox}>
                 {tickerOpts && portfolioContext && stockList &&
                     <Box sx={styleMainColBox}>
@@ -494,15 +497,15 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                             >
                                 {selectedType}
                             </Button>
+                        <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={handleClose} >
+                            cancel
+                        </Button>
                         </Grid>
 
                         {isLoading && <LoadingBox open={isLoading} onClose={() => setIsLoading(false)} />}
                         {infoMessage && <MessageBox open={infoMessage ? true : false} onClose={() => setInfoMessage(undefined)} type='info' message={infoMessage} />}
                         {errorMessage && <MessageBox open={errorMessage ? true : false} onClose={() => setErrorMessage(undefined)} type='error' message={errorMessage} />}
-                        {successMessage && <MessageBox open={successMessage ? true : false} onClose={() => {
-                            setSuccessMessage(undefined);
-                            cleanUpOnClose();
-                        }} type='success' message={successMessage} />}
+                        {successMessage && <MessageBox open={successMessage ? true : false} onClose={() => {handleClose}} type='success' message={successMessage} />}
                     </Box>
                 }
             </Box>

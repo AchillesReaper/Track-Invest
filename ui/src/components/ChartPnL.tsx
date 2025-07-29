@@ -85,7 +85,7 @@ export default function ChartPnL() {
                         { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId' },
                         { data: mktVal, label: 'Market Value', yAxisId: 'rightAxisId' },
                         { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId' },
-                        { data: selfCapital, label: 'Self Capital', yAxisId: 'leftAxisId' },
+                        { data: selfCapital, label: 'Self Capital', yAxisId: 'rightAxisId' },
                     ]}
                     xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
                     yAxis={[

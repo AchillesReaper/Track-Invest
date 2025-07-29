@@ -1,7 +1,7 @@
 
 import { useContext, useEffect, useMemo, useState } from "react";
 
-import { Avatar, Box, Button, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
 import CurrencyExchangeOutlinedIcon from '@mui/icons-material/CurrencyExchangeOutlined';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
@@ -41,12 +41,14 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
     }, [selectedType]);
     const [note, setNote] = useState<string>('');
 
-    const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
-    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
-    const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    // const [showConfirm, setShowConfirm] = useState<boolean>(false);
+    const [dialogMessage, setDialogMessage] = useState<string | undefined>(undefined);
+    const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined);
+    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
+    const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    async function addCashFlow() {
+    async function processAddCashFlow() {
         // 1. add a new field in `cashflow_summary` in the corresponding year
         // 2. update the a) cashflow count, b)the cash_bal, c)net_worth in `portfolioContext.selectedPortPath/portfolio_summary/current`
         if (!portfolioContext) return;
@@ -75,7 +77,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
             await setDoc(cfSumDocRef, { [cfID]: newCashFlow }, { merge: true })
 
             let updatedSelfCapital = portfolioContext.selfCapital;
-            switch (selectedReason){
+            switch (selectedReason) {
                 case 'cash in':
                     console.log(`cash in, amount: `, amount);
                     updatedSelfCapital += amount;
@@ -103,8 +105,28 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         }
     }
 
+    function addCashFlow() {
+        if ((selectedReason === 'cash in' || selectedReason === 'cash out') && note !== '') {
+            setDialogMessage(`Are you sure you want to process a "${selectedReason}" operation? It will contribute to self funded capital calculation.`);
+            return;
+        } else if (selectedReason === 'other' && note === '') {
+            setDialogMessage('You chose "other" as reason, but did not provide a note. Sure you want to proceed?');
+            return;
+        }
+        processAddCashFlow();
+    }
+
+    function handleConfirm() {
+        setDialogMessage(undefined);
+        processAddCashFlow();
+    }
+
+    function handleAbort() {
+        setDialogMessage(undefined);
+        setInfoMessage("Operation aborted by user.");
+    }
+
     function handleClose() {
-        setCTime(dayjs().valueOf());
         setSelectedType('in');
         setAmount(0);
         setNote('');
@@ -124,7 +146,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         }).catch((error) => {
             console.error(`Error in portfolio MTM update: ${error.message}`);
         });
-    },[portfolioContext]);
+    }, [portfolioContext]);
 
     return (
         <Modal open={props.open} onClose={handleClose}>
@@ -201,8 +223,21 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                         <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={addCashFlow} >
                             add
                         </Button>
+                        <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={handleClose} >
+                            cancel
+                        </Button>
                     </Grid>
 
+                    <Dialog open={dialogMessage ? true : false} onClose={handleAbort}>
+                        <DialogTitle>Confirm Action</DialogTitle>
+                        <DialogContent>
+                            {dialogMessage}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleAbort} color="secondary">Abort</Button>
+                            <Button onClick={handleConfirm} color="primary">Confirm</Button>
+                        </DialogActions>
+                    </Dialog>
                     {isLoading && <LoadingBox open={isLoading} onClose={() => setIsLoading(false)} />}
                     {infoMessage && <MessageBox open={infoMessage ? true : false} onClose={() => setInfoMessage(undefined)} type='info' message={infoMessage} />}
                     {errorMessage && <MessageBox open={errorMessage ? true : false} onClose={() => setErrorMessage(undefined)} type='error' message={errorMessage} />}

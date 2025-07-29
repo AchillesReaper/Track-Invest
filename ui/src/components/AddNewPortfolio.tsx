@@ -25,46 +25,6 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
             return;
         }
         const newPortDocRef = doc(db, `users/${auth.currentUser!.email}/portfolios`, portfolioName);
-        // setDoc(newPortDocRef, {
-        //     broker: broker,
-        //     note: note,
-        //     created_at: dayjs().tz().format(),
-        // }).then(() => {
-        //     setSuccessMessage(`Portfolio ${portfolioName} created successfully`);
-        //     if (isDefault) {
-        //         // set this portfolio as default
-        //         const userDocRef = doc(db, `users/${auth.currentUser!.email}`);
-        //         setDoc(userDocRef, {
-        //             default_portfolio: portfolioName,
-        //         }, { merge: true }).then(() => {
-        //             setSuccessMessage(`Portfolio ${portfolioName} is set as default`);
-        //         }).catch((error) => {
-        //             setErrorMessage(`set default: ${error.message}`);
-        //         });
-        //     }
-        // }).catch((error) => {
-        //     setErrorMessage(`addNewPort: ${error.message}`);
-        // })
-
-
-
-        // set portfolio summary
-        // const portfolioSumDocPath = `users/${auth.currentUser!.email}/portfolios/${portfolioName}/portfolio_summary/current`;
-        // setDoc(doc(db, portfolioSumDocPath), {
-        //     cashBalance: 0,
-        //     marginBalance: 0,
-        //     positionValue: 0,
-        //     netWorth: 0,
-        //     selfCapital: 0,
-        //     cashflowCount: 0,
-        //     transactionCount: 0,
-        //     mtmTimeStamp: 0,
-        //     currentPositions: {},
-        // }).then(() => {
-        //     setInfoMessage(`Portfolio summary for ${portfolioName} created successfully`);
-        // }).catch((error) => {
-        //     setErrorMessage(`addNewPort: ${error.message}`);
-        // });
 
         try {
             // create new portfolio document
@@ -160,7 +120,11 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
                         <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={addNewPort} >
                             add
                         </Button>
+                        <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={handleClose} >
+                            cancel
+                        </Button>
                     </Grid>
+
 
                     {isLoading && <LoadingBox open={isLoading} onClose={() => setIsLoading(false)} />}
                     {infoMessage && <MessageBox open={infoMessage ? true : false} onClose={() => setInfoMessage(undefined)} type='info' message={infoMessage} />}
