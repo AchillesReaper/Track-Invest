@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from "react";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { DataGrid, Toolbar, type GridColDef } from "@mui/x-data-grid";
 import type { GridPositionRowEntry } from "../utils/dataInterface";
 import { PortfolioContext } from "../utils/contexts";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import dayjs from "dayjs";
 
 export default function TbPosition() {
     const portfolioContext = useContext(PortfolioContext);
@@ -19,6 +20,16 @@ export default function TbPosition() {
         { field: 'pnlPct', headerName: 'P/L %', type: 'string', width: 100, headerAlign: 'right', align: 'right' },
         { field: 'assetClass', headerName: 'Asset Class', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
     ]
+
+    function CustomToolbar() {
+        return (
+            <Toolbar>
+                <Typography variant="caption" component="div" sx={{ flexGrow: 1 }}>
+                    {`Market price updated at ${dayjs(portfolioContext?.mtmTimeStamp).format('YYYY-MM-DD HH:mm:ss z')}`}
+                </Typography>
+            </Toolbar>
+        )
+    }
 
     useEffect(() => {
         if (!portfolioContext || !portfolioContext.selectedPortPath) { return; }
@@ -50,6 +61,8 @@ export default function TbPosition() {
                 sx={{ width: '100%' }}
                 rows={tableRows}
                 columns={tableCol}
+                slots={{ toolbar: CustomToolbar }}
+                showToolbar
                 sortModel={[{ field: 'assetClass', sort: 'asc' }]} // Sort by asset class in ascending order
             />
         </Box>
