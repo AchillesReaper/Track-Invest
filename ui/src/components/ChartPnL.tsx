@@ -83,7 +83,7 @@ export default function ChartPnL() {
                     grid={{ horizontal: true }}
                     series={[
                         { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId' },
-                        { data: mktVal, label: 'Market Value', yAxisId: 'rightAxisId' },
+                        { data: mktVal, label: 'Position Value', yAxisId: 'rightAxisId' },
                         { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId' },
                         { data: selfCapital, label: 'Self Capital', yAxisId: 'rightAxisId' },
                     ]}

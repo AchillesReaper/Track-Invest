@@ -25,7 +25,7 @@ dayjs.tz.setDefault("Australia/Sydney");
 export default function AddCashFlow(props: { open: boolean, onClose: () => void, }) {
     const portfolioContext = useContext(PortfolioContext);
 
-    const [cTime, setCTime] = useState<number>(dayjs().valueOf())
+    const [cTime, setCTime] = useState<number>(dayjs(portfolioContext?.mtmTimeStamp).valueOf())
     const typeOptions = ['in', 'out'];
     const [selectedType, setSelectedType] = useState<'in' | 'out'>('in');
     const [amount, setAmount] = useState<number>(0);

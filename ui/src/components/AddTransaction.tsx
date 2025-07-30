@@ -31,7 +31,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     const tickerOpts = Object.keys(stockList || {});
     const [selectedTicker, setSelectedTicker] = useState<string | undefined>(undefined)
 
-    const [tTime, setTTime] = useState<number>(dayjs().valueOf());
+    const [tTime, setTTime] = useState<number>(dayjs(portfolioContext?.mtmTimeStamp).valueOf());
     const [amount, setAmount] = useState<number>(0);
     const [currentTickerAmount, setCurrentTickerAmount] = useState<number>(0)
     const [price, setPrice] = useState<number>(0);
