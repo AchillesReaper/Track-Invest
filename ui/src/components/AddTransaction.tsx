@@ -497,15 +497,15 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                             >
                                 {selectedType}
                             </Button>
-                        <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={handleClose} >
-                            cancel
-                        </Button>
+                            <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={handleClose} >
+                                cancel
+                            </Button>
                         </Grid>
 
                         {isLoading && <LoadingBox open={isLoading} onClose={() => setIsLoading(false)} />}
                         {infoMessage && <MessageBox open={infoMessage ? true : false} onClose={() => setInfoMessage(undefined)} type='info' message={infoMessage} />}
                         {errorMessage && <MessageBox open={errorMessage ? true : false} onClose={() => setErrorMessage(undefined)} type='error' message={errorMessage} />}
-                        {successMessage && <MessageBox open={successMessage ? true : false} onClose={() => {handleClose}} type='success' message={successMessage} />}
+                        {successMessage && <MessageBox open={successMessage ? true : false} onClose={handleClose} type='success' message={successMessage} />}
                     </Box>
                 }
             </Box>
