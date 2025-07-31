@@ -1,5 +1,5 @@
 import { Avatar, Box, Button, Checkbox, FormControlLabel, Grid, Modal, TextField, Typography } from "@mui/material";
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 
 import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
 import { auth, db } from '../utils/firebaseConfig';
@@ -8,7 +8,8 @@ import { doc, setDoc } from "firebase/firestore";
 import dayjs from "dayjs";
 import type { NewPortfolio, PortfolioContextType } from "../utils/dataInterface";
 
-export default function AddNewPortfolio(props: { open: boolean, onClose: () => void, }) {
+
+export default function EditPortfolioInfo(props: { open: boolean, onClose: () => void, }) {
     const [portfolioName, setPortfolioName] = useState<string>('')
     const [broker, setBroker] = useState<string>('')
     const [note, setNote] = useState<string>('')
@@ -77,9 +78,9 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
         <Modal open={props.open} onClose={handleClose}>
             <Box sx={styleModalBox}>
                 <Box sx={styleMainColBox}>
-                    <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}> <PersonAddIcon /> </Avatar>
+                    <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}> <ManageAccountsIcon /> </Avatar>
                     <Typography component="h1" variant="h5">
-                        Add New Portfolio
+                        Edit Portfolio
                     </Typography>
                     <Grid container spacing={2} my={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>

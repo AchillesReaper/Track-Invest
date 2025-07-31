@@ -79,7 +79,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         });
                     } else {
                         // define the selected portfolio path
-                        const defaultPortID = userAcc.data().default_portfolio || '';
+                        const defaultPortID = userAcc.data().defaultPortfolio || '';
                         portfolioUnsubscribe = onSnapshot(collection(db, `users/${user.email}/portfolios`), (portfolios) => {
                             const portList = portfolios.docs.map((doc) => doc.id);
                             if (portList.length > 0) {

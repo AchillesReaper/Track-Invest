@@ -2,10 +2,11 @@
 import { useContext, useState } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, CssBaseline, Divider, Drawer, Grid, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, CssBaseline, Divider, Drawer, Grid, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
 import { AccountCircle, Logout } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import SettingsIcon from '@mui/icons-material/Settings';
 import AddToPhotosIcon from '@mui/icons-material/AddToPhotos';
 import AccountSummary from './components/AccountSummary';
 import ChartPositionAllocation from './components/ChartPositionAllocation';
@@ -14,13 +15,16 @@ import DetailTables from './components/DetailTables';
 
 // local components
 import AuthLogin from './components/AuthLogin';
-import { auth } from './utils/firebaseConfig';
+import { auth, db } from './utils/firebaseConfig';
 import AddNewPortfolio from './components/AddNewPortfolio';
 import { AppContext } from './utils/contexts';
+import EditPortfolioInfo from './components/EditPortfolioInfo';
+import { doc, setDoc } from 'firebase/firestore';
 
 
 export default function App() {
     const [isAddNewPortfolio, SetIsAddNewPortfolio] = useState<boolean>(false)
+    const [isEditPortfolioInfo, setIsEditPortfolioInfo] = useState<boolean>(false)
 
     const appContext = useContext(AppContext);
     const isLoggedin = appContext?.isLoggedin || false;
@@ -69,7 +73,7 @@ export default function App() {
     )
 
     // ---------- 2. functions ----------
-    const handleLogOut = () => {
+    function handleLogOut() {
         auth.signOut().then(() => {
             console.log('logout success');
         }).catch((error) => {
@@ -77,12 +81,24 @@ export default function App() {
         })
     }
 
-    const handlePortfolioSelect = (portfolioId: string) => {
+    function handlePortfolioSelect(portfolioId: string) {
         if (appContext?.updateSelectedPortfolio) {
             appContext.updateSelectedPortfolio(portfolioId);
             setDrawerOpen(false); // Close drawer on mobile after selection
         }
     };
+
+    function setAsDefaultPortfolio() {
+        if (!selectedPortfolio) return;
+        const userDocRef = doc(db, `users/${auth.currentUser?.email}`)
+        setDoc(userDocRef, { defaultPortfolio: selectedPortfolio }, { merge: true })
+            .then(() => {
+                console.log(`set ${selectedPortfolio} as default portfolio`);
+            })
+            .catch((error) => {
+                console.error('Error setting default portfolio:', error);
+            });
+    }
 
     return (
         <>
@@ -105,6 +121,10 @@ export default function App() {
                             <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
                                 {selectedPortfolio}
                             </Typography>
+                            <Button variant='contained' color='info' onClick={setAsDefaultPortfolio}>set as default</Button>
+                            <IconButton color="inherit">
+                                <SettingsIcon />
+                            </IconButton>
                         </Toolbar>
                     </AppBar>
 
@@ -167,6 +187,7 @@ export default function App() {
 
                     </Box>
                     <AddNewPortfolio open={isAddNewPortfolio} onClose={() => SetIsAddNewPortfolio(false)} />
+                    <EditPortfolioInfo open={isEditPortfolioInfo} onClose={() => setIsEditPortfolioInfo(false)} />
                 </Box>
                 :
                 <AuthLogin />
