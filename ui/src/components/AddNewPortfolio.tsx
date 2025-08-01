@@ -32,6 +32,10 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
                 broker: broker,
                 note: note,
                 created_at: dayjs().tz().format(),
+                owner: auth.currentUser!.email!, // Set the owner
+                sharedWith: [], // Initialize empty sharing array
+                sharePermissions: {}, // Initialize empty permissions object
+                isPublic: false, // Default to private
             }
             await setDoc(newPortDocRef, newPortfolio);
 

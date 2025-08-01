@@ -13,6 +13,13 @@ export interface AppContextType {
     } | undefined,
     // Add the function to update selected portfolio
     updateSelectedPortfolio: (portfolioId: string) => void,
+    ownedPortfolios: string[],
+    sharedPortfolios: {
+        [portfolioId: string]: {
+            owner: string;
+            permission: 'read' | 'write';
+        }
+    };
 }
 
 export interface PortfolioContextType {
@@ -34,6 +41,12 @@ export interface NewPortfolio {
     broker: string,
     note: string,
     created_at: string,
+    owner: string, // email of the portfolio owner
+    sharedWith?: string[], // array of emails that have access to this portfolio
+    sharePermissions?: {
+        [email: string]: 'read' | 'write' // permission level for each shared user
+    },
+    isPublic?: boolean, // optional: for public portfolios
 }
 
 // **************** cashflow ****************
