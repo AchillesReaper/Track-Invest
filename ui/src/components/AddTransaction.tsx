@@ -42,8 +42,6 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     const [otherFees, setOtherFees] = useState<number>(0);
     const [note, setNote] = useState<string>('');
 
-    // const [totalCF, setTotalCF] = useState<number>(0)
-
     const totalCF = useMemo(() => {
         switch (selectedType) {
             case 'buy':
@@ -54,6 +52,8 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                 return 0;
         }
     }, [amount, price, commission, otherFees, selectedType]);
+
+    const [isFinalStep , setIsFinalStep] = useState<boolean>(false)
 
     const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -82,6 +82,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
         try {
             setIsLoading(true);
+            console.log(`---------------> Processing ${selectedType} order: ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount} <---------------`);
             await createMonthlyStatementIfNeeded(portfolioContext, tTime);
 
             const newCfIdCount = portfolioContext.cashflowCount + 1;
@@ -102,7 +103,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
             // Execute all Firebase operations
             await setDoc(cfSumDocRef, { [newCfId]: newCashFlow }, { merge: true });
-            console.log(`Cashflow deducted: (${newCfId}) - ${valueFormatter2D(newCashFlow.amount)}`);
+            console.log(`---> 1. Cashflow deducted: (${newCfId}) - ${valueFormatter2D(newCashFlow.amount)}`);
 
             // ------ 2. update monthly transaction summary
             const newOrderCount = portfolioContext.transactionCount + 1;
@@ -124,7 +125,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             };
 
             await setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true });
-            console.log(`Transaction added: ${newOrderId} - ${selectedTicker} x ${amount}`);
+            console.log(`---> 2. Transaction added: ${newOrderId} - ${selectedTicker} x ${amount}`);
 
             // ------ 3. update the stock position
             let updatedPosition: SinglePosition | undefined;
@@ -169,7 +170,8 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                 },
             }, { merge: true });
 
-            console.log(`Portfolio summary updated for order ${newOrderId}`);
+            console.log(`---> 3. current positions updated:`, updatedPosition);
+            setIsFinalStep(true);
 
             // ------ 4. call mark to market update function to update the market price and summary figures
 
@@ -189,9 +191,9 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         if (amount <= 0 || price < 0) { setErrorMessage('Amount and Price must be greater than 0'); return; }
         if (amount > currentTickerAmount) { setErrorMessage(`Not enough shares to sell for ${selectedTicker}`); return; }
         if (!portfolioContext || !portfolioContext.currentPositions) return;
-
         try {
             setIsLoading(true);
+            console.log(`---------------> Processing ${selectedType} order: ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount} <---------------`);
             await createMonthlyStatementIfNeeded(portfolioContext, tTime);
 
             // ------ 1. log transaction entry
@@ -215,7 +217,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             };
 
             await setDoc(monthlyOrderSumDocRef, { [newOrderId]: newOrder }, { merge: true });
-            console.log(`Transaction added: ${newOrderId} : ${selectedType} ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
+            console.log(`---> 1. Transaction added: ${newOrderId} : ${selectedType} ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
 
             // ------ 2. log cashflow entry
             const newCfIdCount = portfolioContext.cashflowCount + 1;
@@ -235,7 +237,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             };
 
             await setDoc(cfSumDocRef, { [newCfId]: newCashFlow }, { merge: true });
-            console.log(`Cashflow added: (${newCfId}): +${valueFormatter2D(newCashFlow.amount)}`);
+            console.log(`---> 2. Cashflow added: (${newCfId}): +${valueFormatter2D(newCashFlow.amount)}`);
 
             // ------ 3. update the asset allocation
             const currentTickerPosition: SinglePosition = portfolioContext.currentPositions[selectedTicker];
@@ -264,9 +266,10 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                 cashflowCount: newCfIdCount,
                 transactionCount: newOrderCount,
                 currentPositions: updatedPortPositions,
-            });
+            })
+            setIsFinalStep(true);
 
-            console.log(`Position updated: ${selectedTicker} - ${updatedAmount} shares`);
+            console.log(`---> 3. current position updated: ${updatedPortPositions}`);
 
             // ------ 4. call mtm update function to update the market price and summary figures
             // --> follow with useEffect hook to update MTM after new transaction added
@@ -297,17 +300,26 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
     // mtm after new transaction added
     useEffect(() => {
-        if (!isLoading || !portfolioContext) return;
+        if (!isFinalStep || !portfolioContext) return;
+        console.log(portfolioContext.currentPositions);
         portfolioMtmUpdate(
             portfolioContext,
             dayjs(tTime).tz().format('YYYY-MM-DD'),
             price
         ).then(() => {
             setIsLoading(false);
-            console.log('Portfolio MTM updated successfully');
+            setIsFinalStep(false);
+            console.log('---> 4. Portfolio MTM updated successfully');
+            console.log(`---------------> ${selectedType} order completed successfully <---------------`);
             setSuccessMessage(`Order ${selectedType} ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount} completed successfully.`);
+        }).catch((error) => {
+            setIsLoading(false);
+            setIsFinalStep(false);
+            console.error('Error updating portfolio MTM:', error);
+            setErrorMessage(`Error updating portfolio MTM: ${error.message}`);
         });
-    }, [portfolioContext]);
+            
+    }, [portfolioContext, isFinalStep]);
 
     // get reference mkt price and current position amount
     useEffect(() => {

@@ -1,5 +1,5 @@
 // react components
-import { useContext, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 
 // thrid party libraries
 import { AppBar, Box, Button, CssBaseline, Divider, Drawer, Grid, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
@@ -27,9 +27,9 @@ export default function App() {
     const [isEditPortfolioInfo, setIsEditPortfolioInfo] = useState<boolean>(false)
 
     const appContext = useContext(AppContext);
-    const isLoggedin = appContext?.isLoggedin || false;
-    const portList = appContext?.portList;
-    const selectedPortfolio = appContext?.selectedPortfolio;
+    const isLoggedin = useMemo(() => appContext?.isLoggedin || false, [appContext]);
+    const portList = useMemo(() => appContext?.portList, [appContext]);
+    const selectedPortfolio = useMemo(() => appContext?.selectedPortfolio, [appContext]);
 
     const drawerWidth = 250; // Define the width of the drawer
 

@@ -20,7 +20,7 @@ export async function createMonthlyStatementIfNeeded(portfolioContext: Portfolio
         console.log("New transaction time is before the last month end, no need to create a new monthly statement.");
         return;
     } else {
-        console.log("Creating new monthly statement for the current month.");
+        console.log("#---------- Creating new monthly statement for the current month. ----------#");
         // Here you would implement the logic to create a new monthly statement
         // This could involve updating the portfolio context or making an API call
         // For example:
@@ -45,7 +45,7 @@ export async function createMonthlyStatementIfNeeded(portfolioContext: Portfolio
                 [`${statementMonth}`]: monthEndSnapshot
             }, { merge: true });
 
-            console.log(`Monthly statement for ${statementYear}-${statementMonth} created successfully.`);
+            console.log(`#---------- Monthly statement for ${statementMonth} created successfully. ----------#`);
         } catch (error) {
             console.error("Error creating monthly statement:", error);
             return;
