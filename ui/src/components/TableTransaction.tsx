@@ -16,11 +16,11 @@ import { valueFormatter2D } from "./ZCommonComponents";
 export default function TbTransaction() {
     const portfolioContext = useContext(PortfolioContext);
     const [openAddTsc, setOpenAddTsc] = useState<boolean>(false);
-    const [displayMonth, setDisplayMonth] = useState<string>(dayjs().format('YYYY-MM'));
+    const [displayYear, setDisplayYear] = useState<string>(dayjs().format('YYYY'));
 
     const [tableRows, setTableRows] = useState<GridTransactionRowEntry[]>([]); // Replace 'any' with your specific type if available
     const tableCol: GridColDef[] = [
-        // { field: 'id', headerName: 'ID', type: 'string', width: 150 },
+        { field: 'id', headerName: 'ID', type: 'string', width: 150 },
         { field: 'date', headerName: 'Date', type: 'string', width: 100, headerAlign: 'left', align: 'left' },
         { field: 'type', headerName: 'Type', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
         { field: 'ticker', headerName: 'Ticker', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
@@ -30,20 +30,23 @@ export default function TbTransaction() {
         { field: 'commission', headerName: 'Commission', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
         { field: 'otherFees', headerName: 'Other Fees', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
         { field: 'totalCost', headerName: 'Total Cost', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
-
+        
         { field: 'note', headerName: 'Note', type: 'string', width: 400 },
+        { field: 'createdAt', headerName: 'Created At', type: 'string', width: 200 },
+        { field: 'timeStamp', headerName: 'Time Stamp', type: 'number', width: 150, headerAlign: 'center', align: 'center' },
+
     ];
 
     function CustomToolbar() {
         return (
             <Toolbar>
-                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'left' }}>
                     <ButtonGroup variant="text" size="small">
                         <Button onClick={() => handleMonthChange('prev')}>
                             <KeyboardDoubleArrowLeftIcon fontSize="inherit" />
                         </Button>
-                        <Button>{displayMonth}</Button>
-                        <Button onClick={() => handleMonthChange('next')} >
+                        <Button>{displayYear}</Button>
+                        <Button onClick={() => handleMonthChange('next')} disabled={displayYear === dayjs().format('YYYY')}>
                             <KeyboardDoubleArrowRightIcon fontSize="inherit" />
                         </Button>
                     </ButtonGroup>
@@ -51,7 +54,7 @@ export default function TbTransaction() {
                 </Box>
 
                 <Button color="primary" startIcon={<AddIcon />} onClick={() => setOpenAddTsc(true)}>
-                    add transaction
+                    new order
                 </Button>
             </Toolbar>
         )
@@ -60,10 +63,10 @@ export default function TbTransaction() {
     function handleMonthChange(direction: 'prev' | 'next') {
         switch (direction) {
             case 'prev':
-                setDisplayMonth(dayjs(displayMonth).subtract(1, 'month').format('YYYY-MM'));
+                setDisplayYear(dayjs(displayYear).subtract(1, 'year').format('YYYY'));
                 break;
             case 'next':
-                setDisplayMonth(dayjs(displayMonth).add(1, 'month').format('YYYY-MM'));
+                setDisplayYear(dayjs(displayYear).add(1, 'year').format('YYYY'));
                 break;
             default:
                 break;
@@ -72,11 +75,12 @@ export default function TbTransaction() {
 
     useEffect(() => {
         if (!portfolioContext || !portfolioContext.selectedPortPath) { return; }
-        const txDocRef = doc(db, `${portfolioContext.selectedPortPath}/transactions/${displayMonth}`);
+        const txDocRef = doc(db, `${portfolioContext.selectedPortPath}/order_summary/${displayYear}`);
 
         const unsubscribe = onSnapshot(txDocRef, (txSummary) => {
             if (!txSummary.exists()) {
-                console.log('No transaction summary found');
+                console.log('No transaction summary found in:');
+                console.log(`${portfolioContext.selectedPortPath}/order_summary/${displayYear}`);
                 setTableRows([]);
                 return;
             }
@@ -102,7 +106,7 @@ export default function TbTransaction() {
         });
 
         return () => unsubscribe();
-    }, [portfolioContext, portfolioContext?.selectedPortPath, displayMonth]);
+    }, [portfolioContext, portfolioContext?.selectedPortPath, displayYear]);
 
     return (
         <Box sx={{ maxWidth: '100vw', overflowX: 'auto' }}>
@@ -111,6 +115,10 @@ export default function TbTransaction() {
                 columns={tableCol}
                 slots={{ toolbar: CustomToolbar }}
                 showToolbar
+                columnVisibilityModel={{ id: false, createdAt: false, timeStamp: false }}
+                sortModel={[
+                    { field: 'id', sort: 'desc' } // Sort by ID in descending order
+                ]}
             />
             <AddTransaction open={openAddTsc} onClose={() => setOpenAddTsc(false)} />
         </Box>

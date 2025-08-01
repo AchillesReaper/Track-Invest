@@ -91,7 +91,7 @@ export default function ChartPnL() {
                         <KeyboardDoubleArrowLeftIcon fontSize="inherit" />
                     </Button>
                     <Button >{displayYear}</Button>
-                    <Button onClick={() => handleYearChange('next')} >
+                    <Button onClick={() => handleYearChange('next')} disabled={displayYear === dayjs().format('YYYY')} >
                         <KeyboardDoubleArrowRightIcon fontSize="inherit" />
                     </Button>
                 </ButtonGroup>

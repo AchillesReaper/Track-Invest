@@ -40,7 +40,7 @@ export default function TbCashFlow() {
                     {displayYear ? `Cashflow Summary for ${displayYear}` : 'Cashflow Summary'}
                 </Typography> 
                 <Button color="primary" startIcon={<AddIcon />} onClick={() => setOpenAddCF(true)}>
-                    add cashflow
+                    deposit/withdraw
                 </Button>
             </Toolbar>
         )
@@ -92,9 +92,9 @@ export default function TbCashFlow() {
                 columns={tableCol}
                 slots={{ toolbar: CustomToolbar }}
                 showToolbar
-                columnVisibilityModel={{ id: false, timeStamp: false }}
+                columnVisibilityModel={{ id: false, createdAt: false, timeStamp: false }}
                 sortModel={[
-                    { field: 'timeStamp', sort: 'desc' } // Sort by timestamp in descending order
+                    { field: 'id', sort: 'desc' } // Sort by ID in descending order
                 ]}
             />
             <AddCashFlow open={openAddCF} onClose={() => setOpenAddCF(false)} />

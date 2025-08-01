@@ -62,7 +62,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
 
     const cashflowColPath = `${portfolioContext?.selectedPortPath}/cashflow_summary`
-    const transactionColPath = `${portfolioContext?.selectedPortPath}/transactions`
+    const transactionColPath = `${portfolioContext?.selectedPortPath}/order_summary`
     const portfolioSumDocPath = `${portfolioContext?.selectedPortPath}/portfolio_summary/current`
 
     async function handleBuy() {
@@ -199,7 +199,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             // ------ 1. log transaction entry
             const newOrderCount = portfolioContext.transactionCount + 1;
             const newOrderId = `tx_${newOrderCount.toString().padStart(6, '0')}`;
-            const monthlyOrderSumPath = `${portfolioContext.selectedPortPath}/transactions/${dayjs(tTime).tz().format('YYYY-MM')}`;
+            const monthlyOrderSumPath = `${portfolioContext.selectedPortPath}/order_summary/${dayjs(tTime).tz().format('YYYY')}`;
             const monthlyOrderSumDocRef = doc(db, monthlyOrderSumPath);
             const newOrder: TransactionEntry = {
                 ticker: selectedTicker,
