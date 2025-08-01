@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { PortfolioContext } from "../utils/contexts";
 import type { GridTransactionRowEntry, TransactionEntry } from "../utils/dataInterface";
 import { DataGrid, Toolbar, type GridColDef } from "@mui/x-data-grid";
-import { Box, Button, ButtonGroup, IconButton } from "@mui/material";
+import { Box, Button, ButtonGroup } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';

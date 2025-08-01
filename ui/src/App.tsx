@@ -110,8 +110,8 @@ export default function App() {
                     <AppBar
                         position="fixed"
                         sx={{
-                            width: { sm: `calc(100% - ${drawerWidth}px)` },
-                            ml: { sm: `${drawerWidth}px` },
+                            width: { md: `calc(100% - ${drawerWidth}px)` },
+                            ml: { md: `${drawerWidth}px` },
                         }}
                     >
                         <Toolbar>
@@ -129,7 +129,7 @@ export default function App() {
                     </AppBar>
 
                     <Box component="nav"
-                        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+                        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
 
                     >
                         <Drawer
@@ -140,7 +140,7 @@ export default function App() {
                                 keepMounted: true, // Better open performance on mobile.
                             }}
                             sx={{
-                                display: { xs: 'block', sm: 'none' },
+                                display: { xs: 'block', md: 'none' },
                                 '& .MuiDrawer-paper': {
                                     width: drawerWidth,
                                 },
@@ -152,7 +152,7 @@ export default function App() {
                         <Drawer
                             variant="permanent"
                             sx={{
-                                display: { xs: 'none', sm: 'block' },
+                                display: { xs: 'none', md: 'block' },
                                 '& .MuiDrawer-paper': {
                                     width: drawerWidth,
                                     boxSizing: 'border-box',
@@ -165,7 +165,7 @@ export default function App() {
                     </Box>
 
                     <Box component="main" className='main'
-                        sx={{ flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+                        sx={{ flexGrow: 1, width: { md: `calc(100% - ${drawerWidth}px)` } }}
                     >
                         <Toolbar />
                         <Divider />
