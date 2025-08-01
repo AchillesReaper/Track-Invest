@@ -16,6 +16,13 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     const [isLoggedin, setIsLoggedin] = useState<boolean>(auth.currentUser !== null);
 
     const [portList, setPortList] = useState<string[] | undefined>(undefined)
+    const [ownedPortfolios, setOwnedPortfolios] = useState<string[]>([])
+    const [sharedPortfolios, setSharedPortfolios] = useState<{
+        [portfolioId: string]: {
+            owner: string;
+            permission: 'read' | 'write';
+        }
+    }>({})
     const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
     const [selectedPortPath, setSelectedPortPath] = useState<string | undefined>(undefined)
 
@@ -54,7 +61,20 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         }
 
         setSelectedPortfolio(portfolioId);
-        const newPortPath = `users/${auth.currentUser.email}/portfolios/${portfolioId}`;
+        
+        // Determine the correct path based on whether it's owned or shared
+        let newPortPath = '';
+        if (ownedPortfolios.includes(portfolioId)) {
+            // User owns this portfolio
+            newPortPath = `users/${auth.currentUser.email}/portfolios/${portfolioId}`;
+        } else if (sharedPortfolios[portfolioId]) {
+            // Portfolio is shared with the user
+            newPortPath = `users/${sharedPortfolios[portfolioId].owner}/portfolios/${portfolioId}`;
+        } else {
+            console.warn('Portfolio not found in owned or shared portfolios:', portfolioId);
+            return;
+        }
+        
         setSelectedPortPath(newPortPath);
     };
 
@@ -81,18 +101,55 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         // define the selected portfolio path
                         const defaultPortID = userAcc.data().defaultPortfolio || '';
                         portfolioUnsubscribe = onSnapshot(collection(db, `users/${user.email}/portfolios`), (portfolios) => {
-                            const portList = portfolios.docs.map((doc) => doc.id);
-                            if (portList.length > 0) {
-                                setPortList(portList);
-                                console.log('Portfolios fetched:', portList);
+                            const allPortfolios = portfolios.docs.map((doc) => ({
+                                id: doc.id,
+                                data: doc.data()
+                            }));
+                            
+                            // Separate owned and shared portfolios
+                            const owned: string[] = [];
+                            const shared: { [key: string]: { owner: string; permission: 'read' | 'write' } } = {};
+                            
+                            allPortfolios.forEach(({ id, data }) => {
+                                if (data.owner === user.email) {
+                                    owned.push(id);
+                                } else if (data.sharedWith && data.sharedWith.includes(user.email)) {
+                                    const permission = data.sharePermissions?.[user.email!] || 'read';
+                                    shared[id] = {
+                                        owner: data.owner,
+                                        permission: permission as 'read' | 'write'
+                                    };
+                                }
+                            });
+                            
+                            const allPortfolioIds = [...owned, ...Object.keys(shared)];
+                            
+                            setOwnedPortfolios(owned);
+                            setSharedPortfolios(shared);
+                            setPortList(allPortfolioIds);
+                            
+                            if (allPortfolioIds.length > 0) {
+                                console.log('Owned portfolios:', owned);
+                                console.log('Shared portfolios:', shared);
+                                console.log('All portfolios:', allPortfolioIds);
+                                
                                 let selectedPortID = '';
-                                if (defaultPortID && portList.includes(defaultPortID)) {
+                                if (defaultPortID && allPortfolioIds.includes(defaultPortID)) {
                                     selectedPortID = defaultPortID;
                                 } else {
-                                    selectedPortID = portList[0]; // Set the first portfolio as default if none is selected
+                                    selectedPortID = allPortfolioIds[0]; // Set the first portfolio as default if none is selected
                                 }
+                                
+                                // Determine the portfolio path based on ownership
+                                let portfolioPath = '';
+                                if (owned.includes(selectedPortID)) {
+                                    portfolioPath = `users/${user.email}/portfolios/${selectedPortID}`;
+                                } else if (shared[selectedPortID]) {
+                                    portfolioPath = `users/${shared[selectedPortID].owner}/portfolios/${selectedPortID}`;
+                                }
+                                
                                 setSelectedPortfolio(selectedPortID);
-                                setSelectedPortPath(`users/${user.email}/portfolios/${selectedPortID}`);
+                                setSelectedPortPath(portfolioPath);
                             }
                         })
                     }
@@ -100,6 +157,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             } else {    // User is signed out
                 setIsLoggedin(false);
                 setPortList(undefined);
+                setOwnedPortfolios([]);
+                setSharedPortfolios({});
                 setSelectedPortfolio(undefined);
                 setSelectedPortPath(undefined);
                 console.log("No user is signed in.");
@@ -120,7 +179,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
             selectedPortfolio: selectedPortfolio,
             selectedPortPath: selectedPortPath,
             stockList: stockList,
-            updateSelectedPortfolio: updateSelectedPortfolio
+            updateSelectedPortfolio: updateSelectedPortfolio,
+            ownedPortfolios: ownedPortfolios,
+            sharedPortfolios: sharedPortfolios
         }}>
             {children}
         </AppContext.Provider>
@@ -137,6 +198,10 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
 
     const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
     const [selectedPortPath, setSelectedPortPath] = useState<string | undefined>(undefined)
+    const [portfolioOwner, setPortfolioOwner] = useState<string | undefined>(undefined)
+    const [isOwner, setIsOwner] = useState<boolean>(false)
+    const [isEditable, setIsEditable] = useState<boolean>(false)
+    const [sharePermission, setSharePermission] = useState<'read' | 'write' | 'owner' | undefined>(undefined)
     const [cashBalance, setCashBalance] = useState<number>(0);
     const [marginBalance, setMarginBalance] = useState<number>(0);
     const [positionValue, setPositionValue] = useState<number>(0);
@@ -162,6 +227,10 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             // Reset state when no portfolio is selected
             setSelectedPortfolio(undefined);
             setSelectedPortPath(undefined);
+            setPortfolioOwner(undefined);
+            setIsOwner(false);
+            setIsEditable(false);
+            setSharePermission(undefined);
             setCashBalance(0);
             setMarginBalance(0);
             setPositionValue(0);
@@ -174,7 +243,31 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             return;
         }
         const portfolioPath = appContext.selectedPortPath;
-        setSelectedPortfolio(appContext.selectedPortfolio);
+        const currentPortfolioId = appContext.selectedPortfolio;
+        setSelectedPortfolio(currentPortfolioId);
+        setSelectedPortPath(portfolioPath);
+        
+        // Determine ownership and permissions
+        if (currentPortfolioId && appContext.ownedPortfolios.includes(currentPortfolioId)) {
+            // User owns this portfolio
+            setPortfolioOwner(auth.currentUser?.email || '');
+            setIsOwner(true);
+            setIsEditable(true);
+            setSharePermission('owner');
+        } else if (currentPortfolioId && appContext.sharedPortfolios[currentPortfolioId]) {
+            // Portfolio is shared with the user
+            const sharedInfo = appContext.sharedPortfolios[currentPortfolioId];
+            setPortfolioOwner(sharedInfo.owner);
+            setIsOwner(false);
+            setIsEditable(sharedInfo.permission === 'write');
+            setSharePermission(sharedInfo.permission);
+        } else {
+            // Fallback
+            setPortfolioOwner(undefined);
+            setIsOwner(false);
+            setIsEditable(false);
+            setSharePermission(undefined);
+        }
         setSelectedPortPath(portfolioPath);
 
         try {
@@ -213,12 +306,16 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
                 positionCurrentUnsubscribe.current = null;
             }
         };
-    }, [appContext?.selectedPortPath, appContext?.selectedPortfolio]);
+    }, [appContext?.selectedPortPath, appContext?.selectedPortfolio, appContext?.ownedPortfolios, appContext?.sharedPortfolios]);
 
     return (
         <PortfolioContext.Provider value={{
             selectedPortfolio: selectedPortfolio,
             selectedPortPath: selectedPortPath,
+            portfolioOwner: portfolioOwner,
+            isOwner: isOwner,
+            isEditable: isEditable,
+            sharePermission: sharePermission,
             cashBalance: cashBalance,
             marginBalance: marginBalance,
             positionValue: positionValue,

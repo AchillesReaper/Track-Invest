@@ -25,6 +25,10 @@ export interface AppContextType {
 export interface PortfolioContextType {
     selectedPortfolio?: string | undefined,
     selectedPortPath?: string | undefined,
+    portfolioOwner?: string, // email of the portfolio owner
+    isOwner?: boolean, // true if current user owns this portfolio
+    isEditable?: boolean, // true if user has write permission (owner or shared with write access)
+    sharePermission?: 'read' | 'write' | 'owner', // current user's permission level
     cashBalance: number,
     marginBalance: number,
     positionValue: number,

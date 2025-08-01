@@ -1,0 +1,22 @@
+|-- stock_list
+|   |-- us: {}
+|
+|-- users
+|   |-- userAccount (email address)
+|       |-- portfolios
+|           |-- portfolio 1/2/3
+|               |-- cashflow_summary
+|               |   |-- Year (2004, 2005, ...)
+|               |
+|               |-- transactions    @TODO: change it like cashflow_summary
+|               |   |-- Month (2004-12, 2005-01, ...)
+|               |
+|               |-- portfolio_summary
+|                   |-- current
+|                   |-- Year (2004, 2005, ...)
+|
+|-- share_catalog
+    |-- share_target (email address)        <----- useContext Read this
+        |-- share_from
+            |-- sharer  (email address)     <----- allow sharer to write
+                |--> sharePortfolios: []
