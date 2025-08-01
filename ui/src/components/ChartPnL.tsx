@@ -7,19 +7,25 @@ import type { PortfolioContextType } from '../utils/dataInterface';
 import { db } from '../utils/firebaseConfig';
 import { valueFormatter2D } from './ZCommonComponents';
 import { chartsTooltipClasses } from '@mui/x-charts';
+import { Button, ButtonGroup, Toolbar } from '@mui/material';
+import KeyboardDoubleArrowLeftIcon from '@mui/icons-material/KeyboardDoubleArrowLeft';
+import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 
 export default function ChartPnL() {
     // 1. show the net worth of the portfolio over time
     // 2. show the position value over time
     const portfolioContext = useContext(PortfolioContext);
-    const [displayYear] = useState<string>(dayjs().format('YYYY'));
+    const [displayYear, setDisplayYear] = useState<string>(dayjs().format('YYYY'));
     const [xAxisLabels, setXAxisLabels] = useState<string[] | undefined>(undefined)
     const [netWorth, setNetWorth] = useState<number[] | undefined>(undefined)
     const [mktVal, setMktVal] = useState<number[] | undefined>(undefined);
     const [cashBalance, setCashBalance] = useState<number[] | undefined>(undefined)
     const [selfCapital, setSelfCapital] = useState<number[] | undefined>(undefined);
 
-
+    function handleYearChange(direction: 'prev' | 'next') {
+        const newYear = dayjs(displayYear).add(direction === 'prev' ? -1 : 1, 'year').format('YYYY');
+        setDisplayYear(newYear);
+    }
 
     useEffect(() => {
         if (!portfolioContext || !portfolioContext.selectedPortPath) {
@@ -79,15 +85,26 @@ export default function ChartPnL() {
 
     return (
         <div className="R2Card">
+            <Toolbar sx={{ justifyContent: 'center' }}>
+                <ButtonGroup variant="outlined" color='warning' size="small">
+                    <Button onClick={() => handleYearChange('prev')}>
+                        <KeyboardDoubleArrowLeftIcon fontSize="inherit" />
+                    </Button>
+                    <Button >{displayYear}</Button>
+                    <Button onClick={() => handleYearChange('next')} >
+                        <KeyboardDoubleArrowRightIcon fontSize="inherit" />
+                    </Button>
+                </ButtonGroup>
+            </Toolbar>
             {xAxisLabels && mktVal && netWorth &&
                 <LineChart
                     height={300}
                     grid={{ horizontal: true }}
                     series={[
+                        { data: selfCapital, label: 'Self Capital', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
                         { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId', valueFormatter: valueFormatter2D },
                         { data: mktVal, label: 'Position Value', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
                         { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
-                        { data: selfCapital, label: 'Self Capital', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
                     ]}
                     xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
                     yAxis={[
@@ -102,6 +119,7 @@ export default function ChartPnL() {
                             valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
                         },
                     ]}
+                    hideLegend
                     slotProps={{
                         tooltip: {
                             sx: {

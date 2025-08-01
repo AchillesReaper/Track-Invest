@@ -84,7 +84,7 @@ export default function ChartPositionAllocation() {
                 faded: { innerRadius: 50, additionalRadius: -50, color: 'gray' },
             },
         ],
-        height: 330,
+        height: 365,
         // width: 300,
         hideLegend: true,
     } satisfies PieChartProps;

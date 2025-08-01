@@ -6,7 +6,7 @@ import CurrencyExchangeOutlinedIcon from '@mui/icons-material/CurrencyExchangeOu
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 
-import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
+import { LoadingBox, MessageBox, styleMainColBox, styleModalBox, valueFormatter2D } from "./ZCommonComponents";
 import { db } from '../utils/firebaseConfig';
 import type { CashflowEntry } from "../utils/dataInterface";
 import { doc, setDoc } from "firebase/firestore";
@@ -25,7 +25,7 @@ dayjs.tz.setDefault("Australia/Sydney");
 export default function AddCashFlow(props: { open: boolean, onClose: () => void, }) {
     const portfolioContext = useContext(PortfolioContext);
 
-    const [cTime, setCTime] = useState<number>(dayjs(portfolioContext?.mtmTimeStamp).valueOf())
+    const [cTime, setCTime] = useState<number>(dayjs(portfolioContext?.mtmTimeStamp).valueOf()+1)
     const typeOptions = ['in', 'out'];
     const [selectedType, setSelectedType] = useState<'in' | 'out'>('in');
     const [amount, setAmount] = useState<number>(0);
@@ -142,7 +142,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
         if (!portfolioContext || !isLoading) return;
         portfolioMtmUpdate(portfolioContext, dayjs(cTime + 1).tz().format('YYYY-MM-DD')).then(() => {
             console.log('Portfolio MTM update completed');
-            setSuccessMessage(`Cashflow: ${selectedType} $${amount} for ${selectedReason} added successfully`);
+            setSuccessMessage(`Cashflow: ${selectedType} ${valueFormatter2D(amount)} for ${selectedReason} added successfully`);
         }).catch((error) => {
             console.error(`Error in portfolio MTM update: ${error.message}`);
         });

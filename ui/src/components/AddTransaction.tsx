@@ -1,5 +1,5 @@
 import { Autocomplete, Avatar, Box, Button, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
-import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
+import { LoadingBox, MessageBox, styleMainColBox, styleModalBox, valueFormatter2D } from "./ZCommonComponents";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext, PortfolioContext } from "../utils/contexts";
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -31,7 +31,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     const tickerOpts = Object.keys(stockList || {});
     const [selectedTicker, setSelectedTicker] = useState<string | undefined>(undefined)
 
-    const [tTime, setTTime] = useState<number>(dayjs(portfolioContext?.mtmTimeStamp).valueOf());
+    const [tTime, setTTime] = useState<number>(dayjs(portfolioContext?.mtmTimeStamp).valueOf()+1);
     const [amount, setAmount] = useState<number>(0);
     const [currentTickerAmount, setCurrentTickerAmount] = useState<number>(0)
     const [price, setPrice] = useState<number>(0);
@@ -76,7 +76,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
         // ------ 1. if there is enough cash balance -> deduct cash balance
         if (portfolioContext.cashBalance - totalCF < 0) {
-            setErrorMessage(`Not enough cash balance. Cash needed: $${totalCF.toLocaleString('en-US')}, Cash available: $${portfolioContext.cashBalance.toLocaleString('en-US')}`);
+            setErrorMessage(`Not enough cash balance. Cash needed: $${valueFormatter2D(totalCF)}, Cash available: $${valueFormatter2D(portfolioContext.cashBalance)}`);
             return;
         }
 
@@ -102,7 +102,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
 
             // Execute all Firebase operations
             await setDoc(cfSumDocRef, { [newCfId]: newCashFlow }, { merge: true });
-            console.log(`Cashflow deducted: (${newCfId}) - $${newCashFlow.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+            console.log(`Cashflow deducted: (${newCfId}) - ${valueFormatter2D(newCashFlow.amount)}`);
 
             // ------ 2. update monthly transaction summary
             const newOrderCount = portfolioContext.transactionCount + 1;
@@ -235,7 +235,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             };
 
             await setDoc(cfSumDocRef, { [newCfId]: newCashFlow }, { merge: true });
-            console.log(`Cashflow added: (${newCfId}): +$${newCashFlow.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+            console.log(`Cashflow added: (${newCfId}): +${valueFormatter2D(newCashFlow.amount)}`);
 
             // ------ 3. update the asset allocation
             const currentTickerPosition: SinglePosition = portfolioContext.currentPositions[selectedTicker];
@@ -269,9 +269,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             console.log(`Position updated: ${selectedTicker} - ${updatedAmount} shares`);
 
             // ------ 4. call mtm update function to update the market price and summary figures
-            // await portfolioMtmUpdate(portfolioContext, dayjs(tTime).tz().format('YYYY-MM-DD'));
-
-            // setSuccessMessage(`Order done! ${newOrderId}: Sell ${selectedTicker} @ $${price.toLocaleString('en-US')} x ${amount}`);
+            // --> follow with useEffect hook to update MTM after new transaction added
 
         } catch (error: any) {
             console.error(`Error processing sell order: ${error.message}`);
@@ -473,7 +471,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                             </Grid>
                             <Grid size={{ xs: 12 }}>
                                 <Typography variant="caption" color="text.secondary" align="center">
-                                    {`Cash balance: $${portfolioContext.cashBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                                    {`Cash balance: ${valueFormatter2D(portfolioContext.cashBalance)}`}
                                 </Typography>
                                 <br />
                                 <Typography variant="caption" color="text.secondary" align="center">
@@ -481,11 +479,11 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                                 </Typography>
                                 <br />
                                 <Typography variant="caption" color="text.secondary" align="center">
-                                    {selectedType} {selectedTicker} @ ${price.toLocaleString('en-US')} x {amount}
+                                    {selectedType} {selectedTicker} @ ${valueFormatter2D(price)} x {amount}
                                     <ArrowRightAltIcon />
                                     {selectedType === 'buy'
-                                        ? `-$${totalCF.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-                                        : `+$${totalCF.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                                        ? `-${valueFormatter2D(totalCF)}`
+                                        : `+${valueFormatter2D(totalCF)}`
                                     }
                                 </Typography>
                             </Grid>

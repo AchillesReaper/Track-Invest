@@ -39,13 +39,13 @@ export default function TbTransaction() {
             <Toolbar>
                 <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
                     <ButtonGroup variant="text" size="small">
-                        <IconButton size="small" onClick={() => handleMonthChange('prev')}>
+                        <Button onClick={() => handleMonthChange('prev')}>
                             <KeyboardDoubleArrowLeftIcon fontSize="inherit" />
-                        </IconButton>
-                        <Button disabled>{displayMonth}</Button>
-                        <IconButton size="small" onClick={() => handleMonthChange('next')} >
+                        </Button>
+                        <Button>{displayMonth}</Button>
+                        <Button onClick={() => handleMonthChange('next')} >
                             <KeyboardDoubleArrowRightIcon fontSize="inherit" />
-                        </IconButton>
+                        </Button>
                     </ButtonGroup>
 
                 </Box>
