@@ -10,6 +10,7 @@ import AddTransaction from "./AddTransaction";
 import dayjs from "dayjs";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../utils/firebaseConfig";
+import { valueFormatter2D } from "./ZCommonComponents";
 
 
 export default function TbTransaction() {
@@ -23,11 +24,13 @@ export default function TbTransaction() {
         { field: 'date', headerName: 'Date', type: 'string', width: 100, headerAlign: 'left', align: 'left' },
         { field: 'type', headerName: 'Type', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
         { field: 'ticker', headerName: 'Ticker', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'price', headerName: 'Price', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'commission', headerName: 'Commission', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'otherFees', headerName: 'Other Fees', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'totalCost', headerName: 'Total Cost', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
+
+        { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'price', headerName: 'Price', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'commission', headerName: 'Commission', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'otherFees', headerName: 'Other Fees', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'totalCost', headerName: 'Total Cost', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+
         { field: 'note', headerName: 'Note', type: 'string', width: 400 },
     ];
 

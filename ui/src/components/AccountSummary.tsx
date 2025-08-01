@@ -9,8 +9,8 @@ export default function AccountSummary() {
     useEffect(() => {
         if (!portfolioContext) return;
         setAccSummary({
+            'Self Funding': portfolioContext.selfCapital,
             'Cash Balance': portfolioContext.cashBalance,
-            'Margin Balance': portfolioContext.marginBalance,
             'Position Value': portfolioContext.positionValue,
             'Net Worth': portfolioContext.netWorth,
         })

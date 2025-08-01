@@ -4,6 +4,7 @@ import type { GridPositionRowEntry } from "../utils/dataInterface";
 import { PortfolioContext } from "../utils/contexts";
 import { Box, Typography } from "@mui/material";
 import dayjs from "dayjs";
+import { valueFormatter2D } from "./ZCommonComponents";
 
 export default function TbPosition() {
     const portfolioContext = useContext(PortfolioContext);
@@ -11,12 +12,12 @@ export default function TbPosition() {
     const [tableRows, setTableRows] = useState<GridPositionRowEntry[]>([])
     const tableCol: GridColDef[] = [
         { field: 'id', headerName: 'Ticker', type: 'string', width: 100 },
-        { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'avgCost', headerName: 'Buy-in Price', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'totalCost', headerName: 'Total Cost', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'marketPrice', headerName: 'Mkt Price', type: 'number', width: 100 },
-        { field: 'marketValue', headerName: 'Mkt Value', type: 'number', width: 100 },
-        { field: 'pnl', headerName: 'P/L', type: 'number', width: 100 },
+        { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'right', align: 'right' },
+        { field: 'avgCost', headerName: 'Buy-in Price', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'totalCost', headerName: 'Total Cost', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'marketPrice', headerName: 'Mkt Price', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'marketValue', headerName: 'Mkt Value', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'pnl', headerName: 'P/L', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
         { field: 'pnlPct', headerName: 'P/L %', type: 'string', width: 100, headerAlign: 'right', align: 'right' },
         { field: 'assetClass', headerName: 'Asset Class', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
     ]

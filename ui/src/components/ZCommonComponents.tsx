@@ -105,3 +105,15 @@ export function MessageBox(props: { open: boolean, onClose: () => void, type: st
 
 }
 
+
+export function valueFormatter2D(value: number | string | undefined | null): string {
+    if (value === undefined || value === null) {
+        return '';
+    }
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    return numValue.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+
+}

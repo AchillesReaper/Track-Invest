@@ -5,6 +5,8 @@ import { PortfolioContext } from '../utils/contexts';
 import { doc, getDoc } from 'firebase/firestore';
 import type { PortfolioContextType } from '../utils/dataInterface';
 import { db } from '../utils/firebaseConfig';
+import { valueFormatter2D } from './ZCommonComponents';
+import { chartsTooltipClasses } from '@mui/x-charts';
 
 export default function ChartPnL() {
     // 1. show the net worth of the portfolio over time
@@ -82,10 +84,10 @@ export default function ChartPnL() {
                     height={300}
                     grid={{ horizontal: true }}
                     series={[
-                        { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId' },
-                        { data: mktVal, label: 'Position Value', yAxisId: 'rightAxisId' },
-                        { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId' },
-                        { data: selfCapital, label: 'Self Capital', yAxisId: 'rightAxisId' },
+                        { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId', valueFormatter: valueFormatter2D },
+                        { data: mktVal, label: 'Position Value', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
+                        { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
+                        { data: selfCapital, label: 'Self Capital', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
                     ]}
                     xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
                     yAxis={[
@@ -100,6 +102,15 @@ export default function ChartPnL() {
                             valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
                         },
                     ]}
+                    slotProps={{
+                        tooltip: {
+                            sx: {
+                                [`&.${chartsTooltipClasses.root} .${chartsTooltipClasses.valueCell}`]: {
+                                    textAlign: 'right',
+                                },
+                            },
+                        },
+                    }}
                 />
             }
 

@@ -8,6 +8,7 @@ import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestor
 import { db } from "../utils/firebaseConfig";
 import { PortfolioContext } from "../utils/contexts";
 import type { GridCashflowRowEntry } from "../utils/dataInterface";
+import { valueFormatter2D } from "./ZCommonComponents";
 
 
 export default function TbCashFlow() {
@@ -21,9 +22,9 @@ export default function TbCashFlow() {
         { field: 'date', headerName: 'Date', type: 'string', width: 100, headerAlign: 'left', align: 'left' },
         { field: 'type', headerName: 'Type', type: 'string', width: 100, headerAlign: 'center', align: 'center' },
 
-        { field: 'balPrev', headerName: 'Bal. Prev', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
-        { field: 'balAfter', headerName: 'Bal. After', type: 'number', width: 100, headerAlign: 'center', align: 'center' },
+        { field: 'balPrev', headerName: 'Bal. Prev', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'amount', headerName: 'Amount', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
+        { field: 'balAfter', headerName: 'Bal. After', type: 'number', width: 100, headerAlign: 'right', align: 'right', valueFormatter: valueFormatter2D },
 
         { field: 'reason', headerName: 'Reason', type: 'string', width: 100 },
         { field: 'note', headerName: 'Note', type: 'string', width: 400 },
