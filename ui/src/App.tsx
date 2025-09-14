@@ -2,12 +2,9 @@
 import { useContext, useMemo, useState } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, Button, CssBaseline, Divider, Drawer, Grid, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
-import { AccountCircle, Logout } from '@mui/icons-material';
+import { AppBar, Box, Button, CssBaseline, Divider, Drawer, Grid, IconButton, Toolbar, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import SettingsIcon from '@mui/icons-material/Settings';
-import AddToPhotosIcon from '@mui/icons-material/AddToPhotos';
 import AccountSummary from './components/AccountSummary';
 import ChartPositionAllocation from './components/ChartPositionAllocation';
 import ChartPnL from './components/ChartPnL';
@@ -19,6 +16,7 @@ import { auth, db } from './utils/firebaseConfig';
 import AddNewPortfolio from './components/AddNewPortfolio';
 import { AppContext } from './utils/contexts';
 import EditPortfolioInfo from './components/EditPortfolioInfo';
+import DrawerContent from './components/DrawerContent';
 import { doc, setDoc } from 'firebase/firestore';
 
 
@@ -28,65 +26,14 @@ export default function App() {
 
     const appContext = useContext(AppContext);
     const isLoggedin = useMemo(() => appContext?.isLoggedin || false, [appContext]);
-    const portList = useMemo(() => appContext?.portList, [appContext]);
     const selectedPortfolio = useMemo(() => appContext?.selectedPortfolio, [appContext]);
 
     const drawerWidth = 250; // Define the width of the drawer
 
     // 1. ---------- set up the drawer list ----------
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
-    const drawerContext = (
-        <div >
-            <Toolbar sx={{ backgroundColor: '#1976d2', color: '#fff' }}>
-                <IconButton color="inherit" onClick={() => setDrawerOpen(true)} >
-                    < AccountCircle />
-                </IconButton>
-                <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                    {auth.currentUser?.displayName || 'Guest'}
-                </Typography>
-            </Toolbar>
-            <Divider />
-
-            <List>
-                {portList && portList.map((port) => (
-                    <ListItemButton
-                        key={port}
-                        selected={selectedPortfolio === port}
-                        onClick={() => handlePortfolioSelect(port)}
-                    >
-                        <ListItemIcon> <AccountBalanceWalletIcon /> </ListItemIcon>
-                        <ListItemText primary={port} />
-                    </ListItemButton>
-                ))}
-                <Divider />
-                <ListItemButton onClick={() => SetIsAddNewPortfolio(true)}>
-                    <ListItemIcon> <AddToPhotosIcon /> </ListItemIcon>
-                    <ListItemText primary='Add Portfolio' />
-                </ListItemButton>
-                <Divider />
-                <ListItemButton onClick={() => handleLogOut()}>
-                    <ListItemIcon> <Logout /> </ListItemIcon>
-                    <ListItemText primary={`Log Out`} />
-                </ListItemButton>
-            </List>
-        </div>
-    )
 
     // ---------- 2. functions ----------
-    function handleLogOut() {
-        auth.signOut().then(() => {
-            console.log('logout success');
-        }).catch((error) => {
-            console.log('logout error:', error);
-        })
-    }
-
-    function handlePortfolioSelect(portfolioId: string) {
-        if (appContext?.updateSelectedPortfolio) {
-            appContext.updateSelectedPortfolio(portfolioId);
-            setDrawerOpen(false); // Close drawer on mobile after selection
-        }
-    };
 
     function setAsDefaultPortfolio() {
         if (!selectedPortfolio) return;
@@ -146,7 +93,10 @@ export default function App() {
                                 },
                             }}
                         >
-                            {drawerContext}
+                            <DrawerContent 
+                                setDrawerOpen={setDrawerOpen} 
+                                setIsAddNewPortfolio={SetIsAddNewPortfolio} 
+                            />
                         </Drawer>
 
                         <Drawer
@@ -160,7 +110,10 @@ export default function App() {
                             }}
                             open
                         >
-                            {drawerContext}
+                            <DrawerContent 
+                                setDrawerOpen={setDrawerOpen} 
+                                setIsAddNewPortfolio={SetIsAddNewPortfolio} 
+                            />
                         </Drawer>
                     </Box>
 
