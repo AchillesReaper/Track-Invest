@@ -28,10 +28,11 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
     const assetClassOptions = ['stock', 'bond', 'fund', 'crypto'];
     const [assetClass, setAssetClass] = useState<string>('stock');
     const stockList = appContext!.stockList;
-    const tickerOpts = Object.keys(stockList || {});
+    const tickerOpts = Object.keys(stockList || []).sort((a, b) => a.localeCompare(b));
     const [selectedTicker, setSelectedTicker] = useState<string | undefined>(undefined)
+    const [selectTickerName, setSelectTickerName] = useState<string>('N/A')
 
-    const [tTime, setTTime] = useState<number>(dayjs(portfolioContext?.mtmTimeStamp).valueOf()+1);
+    const [tTime, setTTime] = useState<number>(dayjs(portfolioContext?.mtmTimeStamp).valueOf() + 1);
     const [amount, setAmount] = useState<number>(0);
     const [currentTickerAmount, setCurrentTickerAmount] = useState<number>(0)
     const [price, setPrice] = useState<number>(0);
@@ -53,7 +54,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         }
     }, [amount, price, commission, otherFees, selectedType]);
 
-    const [isFinalStep , setIsFinalStep] = useState<boolean>(false)
+    const [isFinalStep, setIsFinalStep] = useState<boolean>(false)
 
     const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -280,6 +281,36 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
         }
     }
 
+    // get reference mkt price and current position amount
+    function getLatestPrice() {
+        if (!selectedTicker) return;
+        if (stockList && stockList[selectedTicker]) {
+            setSelectTickerName(stockList[selectedTicker].longName);
+        } else {
+            setSelectTickerName('N/A');
+        }
+        setIsLoading(true);
+        if (auth.currentUser) {
+            auth.currentUser.getIdToken().then((token) => {
+                axios.post(`${serverURL}/close-price`, {
+                    ticker: selectedTicker,
+                    date: dayjs(tTime).tz().format('YYYY-MM-DD'),
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }).then((response) => {
+                    setPrice(response.data.historical.close);
+                    console.log('close price loaded successfully:', response.data);
+                }).catch((error) => {
+                    console.error('Error loading close price:', error);
+                }).finally(() => {
+                    setIsLoading(false);
+                });
+
+            });
+        }
+    }
 
     function handleClose() {
         setSelectedTicker(undefined);
@@ -318,35 +349,10 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             console.error('Error updating portfolio MTM:', error);
             setErrorMessage(`Error updating portfolio MTM: ${error.message}`);
         });
-            
+
     }, [portfolioContext, isFinalStep]);
 
-    // get reference mkt price and current position amount
-    useEffect(() => {
-        // set post request to get the ticker price
-        if (!portfolioContext || !selectedTicker || assetClass !== 'stock') return;
-        setIsLoading(true);
-        if (auth.currentUser) {
-            auth.currentUser.getIdToken().then((token) => {
-                axios.post(`${serverURL}/close-price`, {
-                    ticker: selectedTicker,
-                    date: dayjs(tTime).tz().format('YYYY-MM-DD'),
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }).then((response) => {
-                    setPrice(response.data.historical.close);
-                    console.log('close price loaded successfully:', response.data);
-                }).catch((error) => {
-                    console.error('Error loading close price:', error);
-                }).finally(() => {
-                    setIsLoading(false);
-                });
-
-            });
-        }
-    }, [tTime, assetClass, selectedTicker]);
+    
 
     useEffect(() => {
         if (!portfolioContext || !selectedTicker) return;
@@ -414,26 +420,20 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>     {/* ticker */}
-                                {assetClass === 'stock'
-                                    ? <Autocomplete
-                                        fullWidth
-                                        options={tickerOpts}
-                                        value={selectedTicker}
-                                        getOptionLabel={(option) => `${option} : ${stockList[option].longName}`}
-                                        renderInput={(params) => <TextField {...params} label="Ticker" />}
-                                        onChange={(event, newValue) => {
-                                            console.log(event);
-                                            if (newValue) setSelectedTicker(newValue);
-                                        }}
-                                    />
-                                    : <TextField
-                                        fullWidth
-                                        label="ISIN Code"
-                                        value={selectedTicker}
-                                        onChange={(e) => setSelectedTicker(e.target.value)}
-                                    />
-                                }
+                            <Grid size={{ xs: 12, sm: 6 }} >     {/* ticker */}
+                                <TextField
+                                    id="tickerInput"
+                                    fullWidth
+                                    label={assetClass === 'stock' ? "Ticker" : "ISIN Code"}
+                                    placeholder="e.g. AAPL"
+                                    value={selectedTicker}
+                                    onChange={(e) => setSelectedTicker(e.target.value.toUpperCase())}
+                                    onBlur={getLatestPrice}
+                                    InputLabelProps={{
+                                        shrink: true, // Keeps the label always above the input
+                                    }}
+                                />
+
                             </Grid>
 
                             <Grid size={{ xs: 12, sm: 6 }}>     {/* amount */}
@@ -482,15 +482,19 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                                 />
                             </Grid>
                             <Grid size={{ xs: 12 }}>
-                                <Typography variant="caption" color="text.secondary" align="center">
+                                <Typography variant="caption" color="text.secondary" align="center">    {/* Cash balance */}
                                     {`Cash balance: ${valueFormatter2D(portfolioContext.cashBalance)}`}
                                 </Typography>
                                 <br />
-                                <Typography variant="caption" color="text.secondary" align="center">
+                                <Typography variant="caption" color="text.secondary" align="center">    {/* ticker name */}
+                                    {`Ticker Name: ${selectTickerName || 'N/A'}`}
+                                </Typography>
+                                <br />
+                                <Typography variant="caption" color="text.secondary" align="center">    {/* current position */}
                                     {`Current position: ${currentTickerAmount.toLocaleString('en-US')} shares`}
                                 </Typography>
                                 <br />
-                                <Typography variant="caption" color="text.secondary" align="center">
+                                <Typography variant="caption" color="text.secondary" align="center">    {/* transaction summary */}
                                     {selectedType} {selectedTicker} @ ${valueFormatter2D(price)} x {amount}
                                     <ArrowRightAltIcon />
                                     {selectedType === 'buy'
