@@ -2,20 +2,20 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { AppContextType, PortfolioContextType, SinglePosition } from "./dataInterface";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import dayjs from "dayjs";
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
     let userDocUnsubscribe: (() => void) | null = null;
-    let portfolioUnsubscribe: (() => void) | null = null;
-    // let portfolioSummaryUnsubscribe: (() => void) | null = null;
-    // let positionCurrentUnsubscribe: (() => void) | null = null;
+    let selfPortfolioUnsubscribe: (() => void) | null = null;
+    let sharedPortfolioUnsubscribe: (() => void) | null = null;
 
     const [isLoggedin, setIsLoggedin] = useState<boolean>(auth.currentUser !== null);
 
-    const [portList, setPortList] = useState<string[] | undefined>(undefined)
+    const [selfPortfolioList, setSelfPortfolioList] = useState<string[] | undefined>(undefined)
+    const [sharedPortfolioList, setSharedPortfolioList] = useState<string[] | undefined>(undefined)
     const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
     const [selectedPortPath, setSelectedPortPath] = useState<string | undefined>(undefined)
 
@@ -48,13 +48,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     // Function to update selected portfolio and its data
     const updateSelectedPortfolio = (portfolioId: string) => {
         console.log(`Updating selected portfolio to ${portfolioId} ...`);
-        if (!auth.currentUser?.email || !portList?.includes(portfolioId)) {
-            console.warn('Invalid portfolio selection:', portfolioId);
-            return;
-        }
-
         setSelectedPortfolio(portfolioId);
-        const newPortPath = `users/${auth.currentUser.email}/portfolios/${portfolioId}`;
+        const newPortPath = `portfolios/${portfolioId}`;
         setSelectedPortPath(newPortPath);
     };
 
@@ -80,26 +75,41 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                     } else {
                         // define the selected portfolio path
                         const defaultPortID = userAcc.data().defaultPortfolio || '';
-                        portfolioUnsubscribe = onSnapshot(collection(db, `users/${user.email}/portfolios`), (portfolios) => {
-                            const portList = portfolios.docs.map((doc) => doc.id);
-                            if (portList.length > 0) {
-                                setPortList(portList);
-                                console.log('Portfolios fetched:', portList);
+                        console.log(`listening for portfolios belong to the ${user.email}`);
+                        // --- find all portfolios belong to the user ---
+                        let q = query(collection(db, `portfolios`), where('owner', '==', user.email));
+                        selfPortfolioUnsubscribe = onSnapshot(q, (portfolios) => {
+                            const selfPortfolioList = portfolios.docs.map((doc) => doc.id);
+                            if (selfPortfolioList.length > 0) {
+                                setSelfPortfolioList(selfPortfolioList);
+                                console.log('Portfolios fetched:', selfPortfolioList);
                                 let selectedPortID = '';
-                                if (defaultPortID && portList.includes(defaultPortID)) {
+                                if (defaultPortID && selfPortfolioList.includes(defaultPortID)) {
                                     selectedPortID = defaultPortID;
                                 } else {
-                                    selectedPortID = portList[0]; // Set the first portfolio as default if none is selected
+                                    selectedPortID = selfPortfolioList[0]; // Set the first portfolio as default if none is selected
                                 }
                                 setSelectedPortfolio(selectedPortID);
-                                setSelectedPortPath(`users/${user.email}/portfolios/${selectedPortID}`);
+                                setSelectedPortPath(`portfolios/${selectedPortID}`);
                             }
                         })
+
+                        // --- find all portfolios shared with the user ---
+                        let qShared = query(collection(db, `portfolios`), where('shared_with', 'array-contains', user.email));
+                        sharedPortfolioUnsubscribe = onSnapshot(qShared, (portfolios) => {
+                            const sharedPortfolioList = portfolios.docs.map((doc) => doc.id);
+                            if (sharedPortfolioList.length > 0) {
+                                setSharedPortfolioList(sharedPortfolioList);
+                                console.log('Shared portfolios fetched:', sharedPortfolioList);
+                            }
+                        })
+
                     }
                 })
             } else {    // User is signed out
                 setIsLoggedin(false);
-                setPortList(undefined);
+                setSelfPortfolioList(undefined);
+                setSharedPortfolioList(undefined);
                 setSelectedPortfolio(undefined);
                 setSelectedPortPath(undefined);
                 console.log("No user is signed in.");
@@ -109,14 +119,16 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
         return () => {
             authUnsubscribe();
             userDocUnsubscribe?.();
-            portfolioUnsubscribe?.();
+            selfPortfolioUnsubscribe?.();
+            sharedPortfolioUnsubscribe?.();
         };
     }, [auth]);
 
     return (
         <AppContext.Provider value={{
             isLoggedin: isLoggedin,
-            portList: portList,
+            selfPortfolioList: selfPortfolioList,
+            sharedPortfolioList: sharedPortfolioList,
             selectedPortfolio: selectedPortfolio,
             selectedPortPath: selectedPortPath,
             stockList: stockList,

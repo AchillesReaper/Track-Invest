@@ -24,7 +24,8 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
             setErrorMessage('Portfolio name is required');
             return;
         }
-        const newPortDocRef = doc(db, `users/${auth.currentUser!.email}/portfolios`, portfolioName);
+        const portfolioId = auth.currentUser!.email!.split('@')[0] + '-' + portfolioName.toLowerCase();
+        const newPortDocRef = doc(db, `portfolios`, portfolioId);
 
         try {
             // create new portfolio document
@@ -32,6 +33,9 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
                 broker: broker,
                 note: note,
                 created_at: dayjs().tz().format(),
+                owner: auth.currentUser!.email!,
+                portfolio_name: portfolioName,
+                shared_with: [],
             }
             await setDoc(newPortDocRef, newPortfolio);
 
@@ -41,7 +45,7 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
                 await setDoc(userDocRef, { defaultPortfolio: portfolioName, }, { merge: true });
             }
             // set portfolio summary
-            const portfolioSumDocPath = `users/${auth.currentUser!.email}/portfolios/${portfolioName}/portfolio_summary/current`;
+            const portfolioSumDocPath = `portfolios/${portfolioId}/portfolio_summary/current`;
             const portfolioSummary: PortfolioContextType = {
                 cashBalance: 0,
                 marginBalance: 0,

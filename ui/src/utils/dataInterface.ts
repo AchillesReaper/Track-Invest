@@ -1,7 +1,9 @@
 // ******************** app context ****************
 export interface AppContextType {
     isLoggedin: boolean,
-    portList: string[] | undefined,
+    // portList: string[] | undefined,
+    selfPortfolioList: string[] | undefined,
+    sharedPortfolioList: string[] | undefined,
     selectedPortfolio: string | undefined,
     selectedPortPath: string | undefined,
     // stock list should be store in the local storage
@@ -31,9 +33,12 @@ export interface PortfolioContextType {
 
 // **************** portfolio ****************
 export interface NewPortfolio {
+    portfolio_name: string,
     broker: string,
     note: string,
     created_at: string,
+    owner: string,
+    shared_with: string[],
 }
 
 // **************** cashflow ****************

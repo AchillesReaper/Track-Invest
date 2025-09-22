@@ -2,7 +2,7 @@ import { Divider, IconButton, List, ListItemButton, ListItemIcon, ListItemText, 
 import { auth } from "../utils/firebaseConfig";
 import { useContext, useMemo, useState } from "react";
 import { AppContext } from "../utils/contexts";
-import { AccountCircle, Logout } from '@mui/icons-material';
+import { AccountCircle, Logout, ExpandLess, ExpandMore } from '@mui/icons-material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddToPhotosIcon from '@mui/icons-material/AddToPhotos';
 import { sendPasswordResetEmail } from "firebase/auth";
@@ -13,8 +13,12 @@ export default function DrawerContent(props: {
     setIsAddNewPortfolio: (open: boolean) => void
 }) {
     const appContext = useContext(AppContext);
-    const portList = useMemo(() => appContext?.portList, [appContext]);
+    const selfPortList = useMemo(() => appContext?.selfPortfolioList, [appContext]);
+    const sharedPortList = useMemo(() => appContext?.sharedPortfolioList, [appContext]);
     const selectedPortfolio = useMemo(() => appContext?.selectedPortfolio, [appContext]);
+
+    const [isOpenSelfPortfolioList, setIsOpenSelfPortfolioList] = useState<boolean>(true);
+    const [isOpenSharedPortfolioList, setIsOpenSharedPortfolioList] = useState<boolean>(false);
 
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
     const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
@@ -61,17 +65,40 @@ export default function DrawerContent(props: {
             <Divider />
 
             <List>
-                {portList && portList.map((port) => (
-                    <ListItemButton
-                        key={port}
-                        selected={selectedPortfolio === port}
-                        onClick={() => handlePortfolioSelect(port)}
-                    >
-                        <ListItemIcon> <AccountBalanceWalletIcon /> </ListItemIcon>
-                        <ListItemText primary={port} />
+                <ListItemButton onClick={() => setIsOpenSelfPortfolioList(!isOpenSelfPortfolioList)}>
+                    <ListItemIcon> <AccountBalanceWalletIcon /> </ListItemIcon>
+                    <ListItemText primary='My Portfolios' />
+                    {isOpenSelfPortfolioList ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                {isOpenSelfPortfolioList && selfPortList && selfPortList.length > 0 && selfPortList.map((portId) => (
+                    <ListItemButton key={portId} sx={{ pl: 6 }} selected={selectedPortfolio === portId} onClick={() => handlePortfolioSelect(portId)}>
+                        <ListItemText primary={portId} />
                     </ListItemButton>
                 ))}
+                {isOpenSelfPortfolioList && (!selfPortList || selfPortList.length === 0) &&
+                    <ListItemButton sx={{ pl: 4 }} disabled>
+                        <ListItemText primary='No portfolios. Please add one.' />
+                    </ListItemButton>
+                }
                 <Divider />
+
+                <ListItemButton onClick={() => setIsOpenSharedPortfolioList(!isOpenSharedPortfolioList)}>
+                    <ListItemIcon> <AccountBalanceWalletIcon /> </ListItemIcon>
+                    <ListItemText primary='Shared With Me' />
+                    {isOpenSharedPortfolioList ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                {isOpenSharedPortfolioList && sharedPortList && sharedPortList.length > 0 && sharedPortList.map((portId) => (
+                    <ListItemButton key={portId} sx={{ pl: 6 }} selected={selectedPortfolio === portId} onClick={() => handlePortfolioSelect(portId)}>
+                        <ListItemText primary={portId} />
+                    </ListItemButton>
+                ))}
+                 {isOpenSharedPortfolioList && (!sharedPortList || sharedPortList.length === 0) &&
+                    <ListItemButton sx={{ pl: 4 }} disabled>
+                        <ListItemText primary='No portfolios shared with you' />
+                    </ListItemButton>
+                }
+                <Divider />
+                
                 <ListItemButton onClick={() => props.setIsAddNewPortfolio(true)}>
                     <ListItemIcon> <AddToPhotosIcon /> </ListItemIcon>
                     <ListItemText primary='Add Portfolio' />
