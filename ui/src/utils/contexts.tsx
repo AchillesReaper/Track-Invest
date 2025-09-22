@@ -149,6 +149,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
 
     const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
     const [selectedPortPath, setSelectedPortPath] = useState<string | undefined>(undefined)
+    const [isSelfPortfolio, setIsSelfPortfolio] = useState<boolean>(false)
     const [cashBalance, setCashBalance] = useState<number>(0);
     const [marginBalance, setMarginBalance] = useState<number>(0);
     const [positionValue, setPositionValue] = useState<number>(0);
@@ -188,6 +189,14 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
         const portfolioPath = appContext.selectedPortPath;
         setSelectedPortfolio(appContext.selectedPortfolio);
         setSelectedPortPath(portfolioPath);
+        try {
+            // Determine if it's self portfolio
+            setIsSelfPortfolio(appContext.selfPortfolioList!.includes(appContext.selectedPortfolio!));
+        } catch (error) {
+            console.error('Error determining portfolio type:', error);
+            console.log('appContext:', appContext.selfPortfolioList);
+            console.log('selectedPortfolio:', appContext.selectedPortfolio);
+        }
 
         try {
             // Set up listener for portfolio summary data
@@ -231,6 +240,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
         <PortfolioContext.Provider value={{
             selectedPortfolio: selectedPortfolio,
             selectedPortPath: selectedPortPath,
+            isSelfPortfolio: isSelfPortfolio,
             cashBalance: cashBalance,
             marginBalance: marginBalance,
             positionValue: positionValue,

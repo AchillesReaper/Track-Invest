@@ -1,5 +1,5 @@
 import { DataGrid, Toolbar, type GridColDef } from "@mui/x-data-grid";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 
 import AddIcon from '@mui/icons-material/Add';
 import { Box, Button, Typography } from "@mui/material";
@@ -13,6 +13,7 @@ import { valueFormatter2D } from "./ZCommonComponents";
 
 export default function TbCashFlow() {
     const portfolioContext = useContext(PortfolioContext);
+    const isSelfPortfolio = useMemo(() => portfolioContext?.isSelfPortfolio, [portfolioContext]);
     const [openAddCF, setOpenAddCF] = useState<boolean>(false)
     const [displayYear, setDisplayYear] = useState<number | undefined>(undefined)
 
@@ -39,7 +40,7 @@ export default function TbCashFlow() {
                 <Typography variant="caption" component="div" sx={{ flexGrow: 1 }}>
                     {displayYear ? `Cashflow Summary for ${displayYear}` : 'Cashflow Summary'}
                 </Typography> 
-                <Button color="primary" startIcon={<AddIcon />} onClick={() => setOpenAddCF(true)}>
+                <Button color="primary" disabled={!isSelfPortfolio} startIcon={<AddIcon />} onClick={() => setOpenAddCF(true)}>
                     deposit/withdraw
                 </Button>
             </Toolbar>

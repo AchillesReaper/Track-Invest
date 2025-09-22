@@ -20,6 +20,7 @@ export interface AppContextType {
 export interface PortfolioContextType {
     selectedPortfolio?: string | undefined,
     selectedPortPath?: string | undefined,
+    isSelfPortfolio?: boolean | undefined,
     cashBalance: number,
     marginBalance: number,
     positionValue: number,

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { PortfolioContext } from "../utils/contexts";
 import type { GridTransactionRowEntry, TransactionEntry } from "../utils/dataInterface";
 import { DataGrid, Toolbar, type GridColDef } from "@mui/x-data-grid";
@@ -15,6 +15,7 @@ import { valueFormatter2D } from "./ZCommonComponents";
 
 export default function TbTransaction() {
     const portfolioContext = useContext(PortfolioContext);
+    const isSelfPortfolio = useMemo(() => portfolioContext?.isSelfPortfolio, [portfolioContext]);
     const [openAddTsc, setOpenAddTsc] = useState<boolean>(false);
     const [displayYear, setDisplayYear] = useState<string>(dayjs().format('YYYY'));
 
@@ -53,7 +54,7 @@ export default function TbTransaction() {
 
                 </Box>
 
-                <Button color="primary" startIcon={<AddIcon />} onClick={() => setOpenAddTsc(true)}>
+                <Button color="primary" disabled={!isSelfPortfolio} startIcon={<AddIcon />} onClick={() => setOpenAddTsc(true)}>
                     new order
                 </Button>
             </Toolbar>
