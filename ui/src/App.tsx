@@ -2,7 +2,7 @@
 import { useContext, useMemo, useState } from 'react';
 
 // thrid party libraries
-import { AppBar, Box, Button, CssBaseline, Divider, Drawer, Grid, IconButton, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, CssBaseline, Divider, Drawer, Grid, IconButton, Toolbar, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountSummary from './components/AccountSummary';
@@ -12,7 +12,7 @@ import DetailTables from './components/DetailTables';
 
 // local components
 import AuthLogin from './components/AuthLogin';
-import { auth, db } from './utils/firebaseConfig';
+import { auth } from './utils/firebaseConfig';
 import AddNewPortfolio from './components/AddNewPortfolio';
 import { AppContext } from './utils/contexts';
 import EditPortfolioInfo from './components/EditPortfolioInfo';

@@ -248,7 +248,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
                     setBroker(data.broker);
                     setNote(data.note);
                     setOwner(data.owner);
-                    setCreatedAt(data.created_at);
+                    setCreatedAt(data.created_at? data.created_at : '');
                     setSharedWithList(data.shared_with);
                     console.log(`Portfolio basic info for ${appContext.selectedPortfolio} updated`);
                 } else {

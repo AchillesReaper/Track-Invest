@@ -4,6 +4,7 @@ import { doc, setDoc } from "firebase/firestore";
 
 import { Avatar, Box, Button, Checkbox, Chip, Divider, FormControlLabel, Grid, Modal, TextField, Typography } from "@mui/material";
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import AddIcon from '@mui/icons-material/Add';
 
 import { auth, db } from '../utils/firebaseConfig';
 import type { PortfolioBasicInfo } from "../utils/dataInterface";
@@ -185,7 +186,7 @@ export default function EditPortfolioInfo(props: { open: boolean, onClose: () =>
                                 />
                             </Grid>
                             <Grid size={4}>
-                                <Button onClick={handleAddShared}>Add</Button>
+                                <Button onClick={handleAddShared}><AddIcon /></Button>
                             </Grid>
                         </>}
 
