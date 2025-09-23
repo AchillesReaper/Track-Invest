@@ -1,0 +1,53 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "order_summary",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "timeStamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "cashflow_summary", 
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "timeStamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "portfolios",
+      "queryScope": "COLLECTION", 
+      "fields": [
+        {
+          "fieldPath": "owner",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "created_at",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "portfolios",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "shared_with",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "created_at", 
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    
+    // Stock list - read-only for all authenticated users
+    match /stock_list/{document=**} {
+      allow read: if request.auth != null;
+    }
+
+    // User documents
+    match /users/{userId} {
+      allow read, write: if userId == request.auth.token.email;
+      
+      match /{document=**} {
+        allow read, write: if userId == request.auth.token.email;
+      }
+    }
+    
+    // Portfolio documents
+    match /portfolios/{portfolioId} {
+      allow read: if resource.data.shared_with.hasAny([request.auth.token.email]);
+      allow read, write: if resource.data.owner.matches(request.auth.token.email);
+      
+      match /{document=**} {
+        allow read: if get(/databases/$(database)/documents/portfolios/$(portfolioId)).data.shared_with.hasAny([request.auth.token.email]);
+        allow read, write: if get(/databases/$(database)/documents/portfolios/$(portfolioId)).data.owner.matches(request.auth.token.email);
+      }
+    }
+
+  }
+}

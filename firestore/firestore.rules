@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default deny all other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Stock list - read-only for all authenticated users
+    match /stock_list/{document=**} {
+      allow read: if request.auth != null;
+    }
+
+    // User documents - only the user can read/write their own data
+    match /users/{userId} {
+      allow read, write: if userId == request.auth.token.email;
+      
+      match /{document=**} {
+        allow read, write: if userId == request.auth.token.email;
+      }
+    }
+    
+    // Portfolio documents and all sub-collections
+    match /portfolios/{portfolioId} {
+      // Get portfolio data once
+      function getPortfolioData() {
+        return get(/databases/$(database)/documents/portfolios/$(portfolioId)).data;
+      }
+      
+      // Check if user is owner
+      function isOwner() {
+        return getPortfolioData().owner == request.auth.token.email;
+      }
+      
+      // Check if user is in shared_with list
+      function isSharedWith() {
+        let portfolioData = getPortfolioData();
+        return portfolioData.shared_with != null && 
+               portfolioData.shared_with.hasAny([request.auth.token.email]);
+      }
+      
+      // Read access: owner OR shared_with
+      allow read: if isOwner() || isSharedWith();
+      // Write access: only owner
+      allow write: if isOwner();
+      // Create access: only if user is setting themselves as owner
+      allow create: if request.auth != null && 
+                       request.resource.data.owner == request.auth.token.email;
+      
+      // Apply same rules to all sub-collections
+      match /{document=**} {
+        allow read: if isOwner() || isSharedWith();
+        allow write: if isOwner();
+      }
+    }
+  }
+}
