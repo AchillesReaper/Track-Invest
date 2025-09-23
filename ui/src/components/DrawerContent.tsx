@@ -5,6 +5,8 @@ import { AppContext } from "../utils/contexts";
 import { AccountCircle, Logout, ExpandLess, ExpandMore } from '@mui/icons-material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AddToPhotosIcon from '@mui/icons-material/AddToPhotos';
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import LockResetIcon from '@mui/icons-material/LockReset';
 import { sendPasswordResetEmail } from "firebase/auth";
 import { MessageBox } from "./ZCommonComponents";
 
@@ -70,13 +72,14 @@ export default function DrawerContent(props: {
                     <ListItemText primary='My Portfolios' />
                     {isOpenSelfPortfolioList ? <ExpandLess /> : <ExpandMore />}
                 </ListItemButton>
-                {isOpenSelfPortfolioList && selfPortList && selfPortList.length > 0 && selfPortList.map((portId) => (
-                    <ListItemButton key={portId} sx={{ pl: 6 }} selected={selectedPortfolio === portId} onClick={() => handlePortfolioSelect(portId)}>
-                        <ListItemText primary={portId} />
+                {isOpenSelfPortfolioList && selfPortList && Object.keys(selfPortList).length > 0 && Object.keys(selfPortList).map((portId) => (
+                    <ListItemButton key={portId} sx={{ pl: 4 }} selected={selectedPortfolio === portId} onClick={() => handlePortfolioSelect(portId)}>
+                        <ListItemIcon><ArrowRightAltIcon /></ListItemIcon>
+                        <ListItemText primary={selfPortList[portId].portfolio_name} />
                     </ListItemButton>
                 ))}
-                {isOpenSelfPortfolioList && (!selfPortList || selfPortList.length === 0) &&
-                    <ListItemButton sx={{ pl: 4 }} disabled>
+                {isOpenSelfPortfolioList && (!selfPortList || Object.keys(selfPortList).length === 0) &&
+                    <ListItemButton disabled>
                         <ListItemText primary='No portfolios. Please add one.' />
                     </ListItemButton>
                 }
@@ -87,13 +90,14 @@ export default function DrawerContent(props: {
                     <ListItemText primary='Shared With Me' />
                     {isOpenSharedPortfolioList ? <ExpandLess /> : <ExpandMore />}
                 </ListItemButton>
-                {isOpenSharedPortfolioList && sharedPortList && sharedPortList.length > 0 && sharedPortList.map((portId) => (
-                    <ListItemButton key={portId} sx={{ pl: 6 }} selected={selectedPortfolio === portId} onClick={() => handlePortfolioSelect(portId)}>
-                        <ListItemText primary={portId} />
+                {isOpenSharedPortfolioList && sharedPortList && Object.keys(sharedPortList).length > 0 && Object.keys(sharedPortList).map((portId) => (
+                    <ListItemButton key={portId} sx={{ pl: 4 }} selected={selectedPortfolio === portId} onClick={() => handlePortfolioSelect(portId)}>
+                        <ListItemIcon><ArrowRightAltIcon /></ListItemIcon>
+                        <ListItemText primary={sharedPortList[portId].portfolio_name} />
                     </ListItemButton>
                 ))}
-                 {isOpenSharedPortfolioList && (!sharedPortList || sharedPortList.length === 0) &&
-                    <ListItemButton sx={{ pl: 4 }} disabled>
+                 {isOpenSharedPortfolioList && (!sharedPortList || Object.keys(sharedPortList).length === 0) &&
+                    <ListItemButton disabled>
                         <ListItemText primary='No portfolios shared with you' />
                     </ListItemButton>
                 }
@@ -105,7 +109,7 @@ export default function DrawerContent(props: {
                 </ListItemButton>
                 <Divider />
                 <ListItemButton onClick={() => handleResetPassword()}>
-                    <ListItemIcon> <AccountCircle /> </ListItemIcon>
+                    <ListItemIcon> <LockResetIcon /> </ListItemIcon>
                     <ListItemText primary='Reset Password' />
                 </ListItemButton>
                 <Divider />

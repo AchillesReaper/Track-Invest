@@ -17,7 +17,7 @@ import AddNewPortfolio from './components/AddNewPortfolio';
 import { AppContext } from './utils/contexts';
 import EditPortfolioInfo from './components/EditPortfolioInfo';
 import DrawerContent from './components/DrawerContent';
-import { doc, setDoc } from 'firebase/firestore';
+
 
 
 export default function App() {
@@ -27,25 +27,24 @@ export default function App() {
     const appContext = useContext(AppContext);
     const isLoggedin = useMemo(() => appContext?.isLoggedin || false, [appContext]);
     const selectedPortfolio = useMemo(() => appContext?.selectedPortfolio, [appContext]);
-
-    const drawerWidth = 250; // Define the width of the drawer
+    const selfPortList = useMemo(() => appContext?.selfPortfolioList, [appContext]);
+    const sharedPortList = useMemo(() => appContext?.sharedPortfolioList, [appContext]);
+    const [portOwner, portName] = useMemo(() => {
+        if (!selectedPortfolio) return [undefined, undefined];
+        if (selfPortList && Object.keys(selfPortList).includes(selectedPortfolio)) return [selfPortList[selectedPortfolio].owner, selfPortList[selectedPortfolio].portfolio_name];
+        if (sharedPortList && Object.keys(sharedPortList).includes(selectedPortfolio)) return [sharedPortList[selectedPortfolio].owner, sharedPortList[selectedPortfolio].portfolio_name];
+        return [undefined, undefined];
+    }, [selfPortList, sharedPortList, selectedPortfolio]);
+    const isOwner = useMemo(() => {
+        if (!portOwner) return false;
+        if (auth.currentUser?.email === portOwner) return true;
+        return false;
+    }, [portOwner, auth]);
 
     // 1. ---------- set up the drawer list ----------
+    const drawerWidth = 250; // Define the width of the drawer
     const [drawOpen, setDrawerOpen] = useState<boolean>(false)
 
-    // ---------- 2. functions ----------
-
-    function setAsDefaultPortfolio() {
-        if (!selectedPortfolio) return;
-        const userDocRef = doc(db, `users/${auth.currentUser?.email}`)
-        setDoc(userDocRef, { defaultPortfolio: selectedPortfolio }, { merge: true })
-            .then(() => {
-                console.log(`set ${selectedPortfolio} as default portfolio`);
-            })
-            .catch((error) => {
-                console.error('Error setting default portfolio:', error);
-            });
-    }
 
     return (
         <>
@@ -66,10 +65,10 @@ export default function App() {
                                 <MenuIcon />
                             </IconButton>
                             <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                                {selectedPortfolio}
+                                {portName && portOwner && isOwner && `${portName} `}
+                                {portName && !isOwner && `${portName} - ${portOwner}`}
                             </Typography>
-                            <Button variant='contained' color='info' onClick={setAsDefaultPortfolio}>set as default</Button>
-                            <IconButton color="inherit">
+                            <IconButton color="inherit" disabled={!isOwner} onClick={() => setIsEditPortfolioInfo(true)} sx={{ ml: 1 }}>
                                 <SettingsIcon />
                             </IconButton>
                         </Toolbar>

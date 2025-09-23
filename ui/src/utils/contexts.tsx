@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import type { AppContextType, PortfolioContextType, SinglePosition } from "./dataInterface";
+import type { AppContextType, PortfolioBasicInfo, PortfolioContextType, PortfolioSummary, SinglePosition } from "./dataInterface";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, doc, getDoc, onSnapshot, query, setDoc, where } from "firebase/firestore";
@@ -14,8 +14,8 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
 
     const [isLoggedin, setIsLoggedin] = useState<boolean>(auth.currentUser !== null);
 
-    const [selfPortfolioList, setSelfPortfolioList] = useState<string[] | undefined>(undefined)
-    const [sharedPortfolioList, setSharedPortfolioList] = useState<string[] | undefined>(undefined)
+    const [selfPortfolioList, setSelfPortfolioList] = useState<Record<string, { portfolio_name: string, owner: string }> | undefined>(undefined)
+    const [sharedPortfolioList, setSharedPortfolioList] = useState<Record<string, { portfolio_name: string, owner: string }> | undefined>(undefined)
     const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
     const [selectedPortPath, setSelectedPortPath] = useState<string | undefined>(undefined)
 
@@ -79,15 +79,37 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         // --- find all portfolios belong to the user ---
                         let q = query(collection(db, `portfolios`), where('owner', '==', user.email));
                         selfPortfolioUnsubscribe = onSnapshot(q, (portfolios) => {
-                            const selfPortfolioList = portfolios.docs.map((doc) => doc.id);
-                            if (selfPortfolioList.length > 0) {
-                                setSelfPortfolioList(selfPortfolioList);
-                                console.log('Portfolios fetched:', selfPortfolioList);
+                            // console.log(portfolios.docs);
+
+                            // const selfPortfolioList = portfolios.docs.map((doc) => doc.id);
+                            // if (selfPortfolioList.length > 0) {
+                            //     setSelfPortfolioList(selfPortfolioList);
+                            //     console.log('Portfolios fetched:', selfPortfolioList);
+                            //     let selectedPortID = '';
+                            //     if (defaultPortID && selfPortfolioList.includes(defaultPortID)) {
+                            //         selectedPortID = defaultPortID;
+                            //     } else {
+                            //         selectedPortID = selfPortfolioList[0]; // Set the first portfolio as default if none is selected
+                            //     }
+                            //     setSelectedPortfolio(selectedPortID);
+                            //     setSelectedPortPath(`portfolios/${selectedPortID}`);
+                            // }
+                            const selfPortfolioObj = portfolios.docs.reduce((acc, item) => {
+                                acc[item.id] = { 
+                                    portfolio_name: item.data().portfolio_name,
+                                    owner: item.data().owner 
+                                };
+                                return acc;
+                            }, {} as Record<string, { portfolio_name: string, owner: string }>);
+
+                            if (Object.keys(selfPortfolioObj).length > 0) {
+                                setSelfPortfolioList(selfPortfolioObj);
+                                console.log('Portfolios fetched:', selfPortfolioObj);
                                 let selectedPortID = '';
-                                if (defaultPortID && selfPortfolioList.includes(defaultPortID)) {
+                                if (defaultPortID && selfPortfolioObj.hasOwnProperty(defaultPortID)) {
                                     selectedPortID = defaultPortID;
                                 } else {
-                                    selectedPortID = selfPortfolioList[0]; // Set the first portfolio as default if none is selected
+                                    selectedPortID = Object.keys(selfPortfolioObj)[0]; // Set the first portfolio as default if none is selected
                                 }
                                 setSelectedPortfolio(selectedPortID);
                                 setSelectedPortPath(`portfolios/${selectedPortID}`);
@@ -97,10 +119,22 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         // --- find all portfolios shared with the user ---
                         let qShared = query(collection(db, `portfolios`), where('shared_with', 'array-contains', user.email));
                         sharedPortfolioUnsubscribe = onSnapshot(qShared, (portfolios) => {
-                            const sharedPortfolioList = portfolios.docs.map((doc) => doc.id);
-                            if (sharedPortfolioList.length > 0) {
-                                setSharedPortfolioList(sharedPortfolioList);
-                                console.log('Shared portfolios fetched:', sharedPortfolioList);
+                            // console.log('shared portfolios:', portfolios.docs);
+                            // const sharedPortfolioList = portfolios.docs.map((doc) => doc.id);
+                            // if (sharedPortfolioList.length > 0) {
+                            //     setSharedPortfolioList(sharedPortfolioList);
+                            //     console.log('Shared portfolios fetched:', sharedPortfolioList);
+                            // }
+                            const sharedPortfolioObj = portfolios.docs.reduce((acc, item) => {
+                                acc[item.id] = { 
+                                    portfolio_name: item.data().portfolio_name,
+                                    owner: item.data().owner 
+                                };
+                                return acc;
+                            } , {} as Record<string, { portfolio_name: string, owner: string }>);
+                            if (Object.keys(sharedPortfolioObj).length > 0) {
+                                setSharedPortfolioList(sharedPortfolioObj);
+                                console.log('Shared portfolios fetched:', sharedPortfolioObj);
                             }
                         })
 
@@ -144,12 +178,23 @@ export const PortfolioContext = createContext<PortfolioContextType | undefined>(
 
 export const PortfolioContextProvider = ({ children }: { children: React.ReactNode }) => {
     const appContext = useContext(AppContext);
+    const portfolioBasicInfoUnsubscribe = useRef<(() => void) | null>(null);
     const portfolioSummaryUnsubscribe = useRef<(() => void) | null>(null);
     const positionCurrentUnsubscribe = useRef<(() => void) | null>(null);
 
     const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
     const [selectedPortPath, setSelectedPortPath] = useState<string | undefined>(undefined)
     const [isSelfPortfolio, setIsSelfPortfolio] = useState<boolean>(false)
+
+    // portfolio basic info states
+    const [portfolioName, setPortfolioName] = useState<string | undefined>(undefined)
+    const [broker, setBroker] = useState<string | undefined>(undefined)
+    const [note, setNote] = useState<string | undefined>(undefined)
+    const [owner, setOwner] = useState<string | undefined>(undefined)
+    const [createdAt, setCreatedAt] = useState<string | undefined>(undefined)
+    const [sharedWithList, setSharedWithList] = useState<string[] | undefined>(undefined)
+
+    // portfolio summary states
     const [cashBalance, setCashBalance] = useState<number>(0);
     const [marginBalance, setMarginBalance] = useState<number>(0);
     const [positionValue, setPositionValue] = useState<number>(0);
@@ -162,6 +207,10 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
 
     useEffect(() => {
         // Cleanup previous listeners
+        if (portfolioBasicInfoUnsubscribe.current) {
+            portfolioBasicInfoUnsubscribe.current();
+            portfolioBasicInfoUnsubscribe.current = null;
+        }
         if (portfolioSummaryUnsubscribe.current) {
             portfolioSummaryUnsubscribe.current();
             portfolioSummaryUnsubscribe.current = null;
@@ -191,11 +240,31 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
         setSelectedPortPath(portfolioPath);
         try {
             // Determine if it's self portfolio
-            setIsSelfPortfolio(appContext.selfPortfolioList!.includes(appContext.selectedPortfolio!));
+            setIsSelfPortfolio(Object.keys(appContext.selfPortfolioList!).includes(appContext.selectedPortfolio!));
         } catch (error) {
             console.error('Error determining portfolio type:', error);
             console.log('appContext:', appContext.selfPortfolioList);
             console.log('selectedPortfolio:', appContext.selectedPortfolio);
+        }
+        try {
+            // Set up listener for portfolio basic info
+            const portfolioDocRef = doc(db, portfolioPath);
+            portfolioBasicInfoUnsubscribe.current = onSnapshot(portfolioDocRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data() as PortfolioBasicInfo;
+                    setPortfolioName(data.portfolio_name);
+                    setBroker(data.broker);
+                    setNote(data.note);
+                    setOwner(data.owner);
+                    setCreatedAt(data.created_at);
+                    setSharedWithList(data.shared_with);
+                    console.log(`Portfolio basic info for ${appContext.selectedPortfolio} updated`);
+                } else {
+                    console.log(`No portfolio info found for ${appContext.selectedPortfolio}`);
+                }
+            });
+        } catch (error) {
+            console.error('Error setting up portfolio listeners:', error);
         }
 
         try {
@@ -203,7 +272,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             const portfolioSummaryDocRef = doc(db, `${portfolioPath}/portfolio_summary/current`);
             portfolioSummaryUnsubscribe.current = onSnapshot(portfolioSummaryDocRef, (snapshot) => {
                 if (snapshot.exists()) {
-                    const data = snapshot.data() as PortfolioContextType;
+                    const data = snapshot.data() as PortfolioSummary;
                     setCashBalance(data.cashBalance);
                     setMarginBalance(data.marginBalance);
                     setPositionValue(data.positionValue);
@@ -218,7 +287,6 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
                     console.log(`No portfolio summary found for ${appContext.selectedPortfolio}`);
                 }
             });
-
         } catch (error) {
             console.error('Error setting up portfolio listeners:', error);
         }

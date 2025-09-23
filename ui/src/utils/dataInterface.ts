@@ -2,8 +2,8 @@
 export interface AppContextType {
     isLoggedin: boolean,
     // portList: string[] | undefined,
-    selfPortfolioList: string[] | undefined,
-    sharedPortfolioList: string[] | undefined,
+    selfPortfolioList: Record<string, { portfolio_name: string, owner: string }> | undefined,
+    sharedPortfolioList: Record<string, { portfolio_name: string, owner: string }> | undefined,
     selectedPortfolio: string | undefined,
     selectedPortPath: string | undefined,
     // stock list should be store in the local storage
@@ -17,10 +17,24 @@ export interface AppContextType {
     updateSelectedPortfolio: (portfolioId: string) => void,
 }
 
-export interface PortfolioContextType {
-    selectedPortfolio?: string | undefined,
-    selectedPortPath?: string | undefined,
-    isSelfPortfolio?: boolean | undefined,
+export interface PortfolioContextType extends PortfolioBasicInfo, PortfolioSummary {
+    selectedPortfolio: string | undefined,
+    selectedPortPath: string | undefined,
+    isSelfPortfolio: boolean | undefined
+}
+
+
+// **************** portfolio ****************
+export interface PortfolioBasicInfo {
+    portfolio_name: string,
+    broker: string,
+    note: string,
+    created_at: string,
+    owner: string,
+    shared_with: string[],
+}
+
+export interface PortfolioSummary {
     cashBalance: number,
     marginBalance: number,
     positionValue: number,
@@ -32,15 +46,6 @@ export interface PortfolioContextType {
     currentPositions: { [ticker: string]: SinglePosition } | undefined,
 }
 
-// **************** portfolio ****************
-export interface NewPortfolio {
-    portfolio_name: string,
-    broker: string,
-    note: string,
-    created_at: string,
-    owner: string,
-    shared_with: string[],
-}
 
 // **************** cashflow ****************
 export interface CashflowEntry {

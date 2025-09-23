@@ -6,7 +6,7 @@ import { auth, db } from '../utils/firebaseConfig';
 import { useState } from "react";
 import { doc, setDoc } from "firebase/firestore";
 import dayjs from "dayjs";
-import type { NewPortfolio, PortfolioContextType } from "../utils/dataInterface";
+import type { PortfolioBasicInfo, PortfolioSummary } from "../utils/dataInterface";
 
 export default function AddNewPortfolio(props: { open: boolean, onClose: () => void, }) {
     const [portfolioName, setPortfolioName] = useState<string>('')
@@ -29,7 +29,7 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
 
         try {
             // create new portfolio document
-            const newPortfolio: NewPortfolio = {
+            const newPortfolio: PortfolioBasicInfo = {
                 broker: broker,
                 note: note,
                 created_at: dayjs().tz().format(),
@@ -46,7 +46,7 @@ export default function AddNewPortfolio(props: { open: boolean, onClose: () => v
             }
             // set portfolio summary
             const portfolioSumDocPath = `portfolios/${portfolioId}/portfolio_summary/current`;
-            const portfolioSummary: PortfolioContextType = {
+            const portfolioSummary: PortfolioSummary = {
                 cashBalance: 0,
                 marginBalance: 0,
                 positionValue: 0,
