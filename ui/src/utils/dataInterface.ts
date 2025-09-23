@@ -1,7 +1,7 @@
 // ******************** app context ****************
 export interface AppContextType {
     isLoggedin: boolean,
-    // portList: string[] | undefined,
+    defaultPortfolio?: string | undefined,
     selfPortfolioList: Record<string, { portfolio_name: string, owner: string }> | undefined,
     sharedPortfolioList: Record<string, { portfolio_name: string, owner: string }> | undefined,
     selectedPortfolio: string | undefined,
@@ -29,7 +29,7 @@ export interface PortfolioBasicInfo {
     portfolio_name: string,
     broker: string,
     note: string,
-    created_at: string,
+    created_at?: string,
     owner: string,
     shared_with: string[],
 }

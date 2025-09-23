@@ -1,65 +1,85 @@
-import { Avatar, Box, Button, Checkbox, FormControlLabel, Grid, Modal, TextField, Typography } from "@mui/material";
+
+import { useContext, useEffect, useState } from "react";
+import { doc, setDoc } from "firebase/firestore";
+
+import { Avatar, Box, Button, Checkbox, Chip, Divider, FormControlLabel, Grid, Modal, TextField, Typography } from "@mui/material";
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 
-import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
 import { auth, db } from '../utils/firebaseConfig';
-import { useState } from "react";
-import { doc, setDoc } from "firebase/firestore";
-import dayjs from "dayjs";
-import type { NewPortfolio, PortfolioContextType } from "../utils/dataInterface";
+import type { PortfolioBasicInfo } from "../utils/dataInterface";
+import { AppContext, PortfolioContext } from "../utils/contexts";
+import { LoadingBox, MessageBox, styleMainColBox, styleModalBox } from "./ZCommonComponents";
 
 
 export default function EditPortfolioInfo(props: { open: boolean, onClose: () => void, }) {
+    const appContext = useContext(AppContext);
+    const portfolioContext = useContext(PortfolioContext);
+
+    const [originalPortInfo, setOriginalPortInfo] = useState<PortfolioBasicInfo | undefined>(undefined)
+    const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
     const [portfolioName, setPortfolioName] = useState<string>('')
     const [broker, setBroker] = useState<string>('')
     const [note, setNote] = useState<string>('')
-    const [isDefault, setIsDefault] = useState<boolean>(true)
+
+    const [openShareInput, setOpenShareInput] = useState<boolean>(false)
+    const [newShareEmail, setNewShareEmail] = useState<string>('')
+    const [sharedWithList, setSharedWithList] = useState<string[]>([])
+
+    const [isDefault, setIsDefault] = useState<boolean>(false)
 
     const [infoMessage, setInfoMessage] = useState<string | undefined>(undefined)
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
     const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
-    async function addNewPort() {
+
+    async function editPortfolio() {
+        if (!selectedPortfolio) return;
         if (portfolioName === '') {
             setErrorMessage('Portfolio name is required');
             return;
         }
-        const newPortDocRef = doc(db, `users/${auth.currentUser!.email}/portfolios`, portfolioName);
+        setIsLoading(true);
+        const targetPortfolioDocRef = doc(db, `portfolios`, selectedPortfolio);
+        const newPortfolio: PortfolioBasicInfo = {
+            ...originalPortInfo!,
+            broker: broker,
+            note: note,
+            portfolio_name: portfolioName,
+            shared_with: sharedWithList,
+        }
+
 
         try {
-            // create new portfolio document
-            const newPortfolio: NewPortfolio = {
-                broker: broker,
-                note: note,
-                created_at: dayjs().tz().format(),
-            }
-            await setDoc(newPortDocRef, newPortfolio);
-
             // update default portfolio for user
             if (isDefault) {
                 const userDocRef = doc(db, `users/${auth.currentUser!.email}`);
                 await setDoc(userDocRef, { defaultPortfolio: portfolioName, }, { merge: true });
             }
-            // set portfolio summary
-            const portfolioSumDocPath = `users/${auth.currentUser!.email}/portfolios/${portfolioName}/portfolio_summary/current`;
-            const portfolioSummary: PortfolioContextType = {
-                cashBalance: 0,
-                marginBalance: 0,
-                positionValue: 0,
-                netWorth: 0,
-                selfCapital: 0,
-                cashflowCount: 0,
-                transactionCount: 0,
-                mtmTimeStamp: 0,
-                currentPositions: {},
-            }
-            await setDoc(doc(db, portfolioSumDocPath), portfolioSummary)
-            setSuccessMessage(`Portfolio ${portfolioName} created successfully`);
+
+            // create new portfolio document
+            await setDoc(targetPortfolioDocRef, newPortfolio, { merge: true });
+            setIsLoading(false);
+            setSuccessMessage(`Portfolio ${portfolioName} updated successfully`);
         } catch (error) {
-            setErrorMessage(`addNewPort: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            setErrorMessage(`Edit Portfolio: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
 
+    }
+
+
+    function handleAddShared() {
+        if (newShareEmail === '') {
+            setErrorMessage('Email is required');
+            return;
+        }
+        if (sharedWithList.includes(newShareEmail)) {
+            setInfoMessage('This email is already in the share list');
+            setNewShareEmail('');
+            return;
+        }
+        setSharedWithList([...sharedWithList, newShareEmail]);
+        setNewShareEmail('');
     }
 
 
@@ -67,12 +87,45 @@ export default function EditPortfolioInfo(props: { open: boolean, onClose: () =>
         setPortfolioName('');
         setBroker('');
         setNote('');
-        setIsDefault(true);
+        setIsDefault(false);
         setInfoMessage(undefined);
         setErrorMessage(undefined);
         setSuccessMessage(undefined);
         props.onClose();
     }
+
+    useEffect(() => {
+        if (portfolioContext) {
+            setOriginalPortInfo({
+                portfolio_name: portfolioContext.portfolio_name,
+                broker: portfolioContext.broker,
+                note: portfolioContext.note,
+                owner: portfolioContext.owner,
+                shared_with: portfolioContext.shared_with,
+            });
+            setSelectedPortfolio(portfolioContext.selectedPortfolio)
+            setPortfolioName(portfolioContext.portfolio_name);
+            setBroker(portfolioContext.broker);
+            setNote(portfolioContext.note);
+            setSharedWithList(portfolioContext.shared_with);
+        } else {
+            setSelectedPortfolio(undefined)
+            setPortfolioName('');
+            setBroker('');
+            setNote('');
+            setSharedWithList([]);
+        }
+    }, [portfolioContext])
+
+    useEffect(() => {
+        if (!appContext || !portfolioContext) return;
+        if (appContext.defaultPortfolio === portfolioContext.selectedPortfolio) {
+            setIsDefault(true);
+        } else {
+            setIsDefault(false);
+        }
+    }, [appContext])
+
 
     return (
         <Modal open={props.open} onClose={handleClose}>
@@ -83,7 +136,15 @@ export default function EditPortfolioInfo(props: { open: boolean, onClose: () =>
                         Edit Portfolio
                     </Typography>
                     <Grid container spacing={2} my={2}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
+                        <Grid size={{ xs: 12, sm: 12 }}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox checked={isDefault} onChange={() => { setIsDefault(!isDefault) }} />
+                                }
+                                label="Set as Default?"
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>    {/* Portfolio Name */}
                             <TextField
                                 fullWidth
                                 label="Portfolio Name"
@@ -92,7 +153,7 @@ export default function EditPortfolioInfo(props: { open: boolean, onClose: () =>
                                 onChange={(e) => setPortfolioName(e.target.value)}
                             />
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
+                        <Grid size={{ xs: 12, sm: 6 }}>    {/* Broker Name */}
                             <TextField
                                 fullWidth
                                 label="Broker Name"
@@ -101,7 +162,7 @@ export default function EditPortfolioInfo(props: { open: boolean, onClose: () =>
                                 onChange={(e) => setBroker(e.target.value)}
                             />
                         </Grid>
-                        <Grid size={12}>
+                        <Grid size={12}>    {/* Note */}
                             <TextField
                                 fullWidth
                                 label="Note"
@@ -110,16 +171,37 @@ export default function EditPortfolioInfo(props: { open: boolean, onClose: () =>
                                 onChange={(e) => setNote(e.target.value)}
                             />
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox checked={isDefault} onChange={() => { setIsDefault(!isDefault) }} />
-                                }
-                                label="Set as Default?"
-                            />
+                        <Grid size={{ xs: 12, sm: 12 }}>
+                            <Chip label={'share to others'} onClick={() => setOpenShareInput(!openShareInput)} />
                         </Grid>
-                        <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={addNewPort} >
-                            add
+                        {openShareInput && <>
+                            <Grid size={8}>
+                                <TextField
+                                    fullWidth
+                                    label="Share to"
+                                    placeholder="Enter email to share with"
+                                    value={newShareEmail}
+                                    onChange={(e) => { setNewShareEmail(e.target.value) }}
+                                />
+                            </Grid>
+                            <Grid size={4}>
+                                <Button onClick={handleAddShared}>Add</Button>
+                            </Grid>
+                        </>}
+
+                        {/* display share list */}
+                        {sharedWithList && sharedWithList.length > 0 &&
+                            <Grid size={{ xs: 12, sm: 12 }}>
+                                <Typography variant="caption">Below users can see this portfolio</Typography>
+                                <Divider />
+                                {sharedWithList.map((email) => (
+                                    <Chip key={email} label={email} onDelete={() => setSharedWithList(sharedWithList.filter(e => e !== email))} sx={{ m: 0.5 }} />
+                                ))}
+                            </Grid>
+                        }
+
+                        <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={editPortfolio} >
+                            edit
                         </Button>
                         <Button variant="contained" sx={{ width: '50%', display: 'block', margin: 'auto', my: 1 }} onClick={handleClose} >
                             cancel

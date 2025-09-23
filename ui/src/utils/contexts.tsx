@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { collection, doc, getDoc, onSnapshot, query, setDoc, where } from "firebase/firestore";
+import dayjs from "dayjs";
+
 import type { AppContextType, PortfolioBasicInfo, PortfolioContextType, PortfolioSummary, SinglePosition } from "./dataInterface";
 import { auth, db } from "./firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot, query, setDoc, where } from "firebase/firestore";
-import dayjs from "dayjs";
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -13,7 +14,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     let sharedPortfolioUnsubscribe: (() => void) | null = null;
 
     const [isLoggedin, setIsLoggedin] = useState<boolean>(auth.currentUser !== null);
-
+    const [defaultPortfolio, setDefaultPortfolio] = useState<string | undefined>(undefined)
     const [selfPortfolioList, setSelfPortfolioList] = useState<Record<string, { portfolio_name: string, owner: string }> | undefined>(undefined)
     const [sharedPortfolioList, setSharedPortfolioList] = useState<Record<string, { portfolio_name: string, owner: string }> | undefined>(undefined)
     const [selectedPortfolio, setSelectedPortfolio] = useState<string | undefined>(undefined)
@@ -73,27 +74,14 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                             console.error('Error creating user account:', error);
                         });
                     } else {
-                        // define the selected portfolio path
+                        // --- set default portfolio ---
                         const defaultPortID = userAcc.data().defaultPortfolio || '';
+                        setDefaultPortfolio(defaultPortID);
+
                         console.log(`listening for portfolios belong to the ${user.email}`);
                         // --- find all portfolios belong to the user ---
                         let q = query(collection(db, `portfolios`), where('owner', '==', user.email));
                         selfPortfolioUnsubscribe = onSnapshot(q, (portfolios) => {
-                            // console.log(portfolios.docs);
-
-                            // const selfPortfolioList = portfolios.docs.map((doc) => doc.id);
-                            // if (selfPortfolioList.length > 0) {
-                            //     setSelfPortfolioList(selfPortfolioList);
-                            //     console.log('Portfolios fetched:', selfPortfolioList);
-                            //     let selectedPortID = '';
-                            //     if (defaultPortID && selfPortfolioList.includes(defaultPortID)) {
-                            //         selectedPortID = defaultPortID;
-                            //     } else {
-                            //         selectedPortID = selfPortfolioList[0]; // Set the first portfolio as default if none is selected
-                            //     }
-                            //     setSelectedPortfolio(selectedPortID);
-                            //     setSelectedPortPath(`portfolios/${selectedPortID}`);
-                            // }
                             const selfPortfolioObj = portfolios.docs.reduce((acc, item) => {
                                 acc[item.id] = { 
                                     portfolio_name: item.data().portfolio_name,
@@ -119,12 +107,6 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         // --- find all portfolios shared with the user ---
                         let qShared = query(collection(db, `portfolios`), where('shared_with', 'array-contains', user.email));
                         sharedPortfolioUnsubscribe = onSnapshot(qShared, (portfolios) => {
-                            // console.log('shared portfolios:', portfolios.docs);
-                            // const sharedPortfolioList = portfolios.docs.map((doc) => doc.id);
-                            // if (sharedPortfolioList.length > 0) {
-                            //     setSharedPortfolioList(sharedPortfolioList);
-                            //     console.log('Shared portfolios fetched:', sharedPortfolioList);
-                            // }
                             const sharedPortfolioObj = portfolios.docs.reduce((acc, item) => {
                                 acc[item.id] = { 
                                     portfolio_name: item.data().portfolio_name,
@@ -161,6 +143,7 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
     return (
         <AppContext.Provider value={{
             isLoggedin: isLoggedin,
+            defaultPortfolio: defaultPortfolio,
             selfPortfolioList: selfPortfolioList,
             sharedPortfolioList: sharedPortfolioList,
             selectedPortfolio: selectedPortfolio,
@@ -187,12 +170,12 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
     const [isSelfPortfolio, setIsSelfPortfolio] = useState<boolean>(false)
 
     // portfolio basic info states
-    const [portfolioName, setPortfolioName] = useState<string | undefined>(undefined)
-    const [broker, setBroker] = useState<string | undefined>(undefined)
-    const [note, setNote] = useState<string | undefined>(undefined)
-    const [owner, setOwner] = useState<string | undefined>(undefined)
-    const [createdAt, setCreatedAt] = useState<string | undefined>(undefined)
-    const [sharedWithList, setSharedWithList] = useState<string[] | undefined>(undefined)
+    const [portfolioName, setPortfolioName] = useState<string>('') 
+    const [broker, setBroker] = useState<string>('') 
+    const [note, setNote] = useState<string>('') 
+    const [owner, setOwner] = useState<string>('') 
+    const [createdAt, setCreatedAt] = useState<string>('') 
+    const [sharedWithList, setSharedWithList] = useState<string[]>([]) // Initialize with empty array
 
     // portfolio summary states
     const [cashBalance, setCashBalance] = useState<number>(0);
@@ -224,6 +207,13 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             // Reset state when no portfolio is selected
             setSelectedPortfolio(undefined);
             setSelectedPortPath(undefined);
+            setIsSelfPortfolio(false);
+            setPortfolioName('');
+            setBroker('');
+            setNote('');
+            setOwner('');
+            setCreatedAt('');
+            setSharedWithList([]);
             setCashBalance(0);
             setMarginBalance(0);
             setPositionValue(0);
@@ -250,8 +240,10 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             // Set up listener for portfolio basic info
             const portfolioDocRef = doc(db, portfolioPath);
             portfolioBasicInfoUnsubscribe.current = onSnapshot(portfolioDocRef, (snapshot) => {
+                console.log('Listening to portfolio basic info changes...');
                 if (snapshot.exists()) {
                     const data = snapshot.data() as PortfolioBasicInfo;
+                    console.log('Portfolio basic info data:', data);
                     setPortfolioName(data.portfolio_name);
                     setBroker(data.broker);
                     setNote(data.note);
@@ -309,6 +301,12 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             selectedPortfolio: selectedPortfolio,
             selectedPortPath: selectedPortPath,
             isSelfPortfolio: isSelfPortfolio,
+            portfolio_name: portfolioName,
+            broker: broker,
+            note: note,
+            owner: owner,
+            created_at: createdAt,
+            shared_with: sharedWithList,
             cashBalance: cashBalance,
             marginBalance: marginBalance,
             positionValue: positionValue,
