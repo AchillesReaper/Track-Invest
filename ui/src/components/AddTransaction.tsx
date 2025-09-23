@@ -109,7 +109,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
             // ------ 2. update monthly transaction summary
             const newOrderCount = portfolioContext.transactionCount + 1;
             const newOrderId = `tx_${newOrderCount.toString().padStart(6, '0')}`;
-            const monthlyOrderSumDocRef = doc(db, `${transactionColPath}/${dayjs(tTime).tz().format('YYYY-MM')}`);
+            const monthlyOrderSumDocRef = doc(db, `${transactionColPath}/${dayjs(tTime).tz().format('YYYY')}`);
             const newOrder: TransactionEntry = {
                 ticker: selectedTicker,
                 assetClass: assetClass,
