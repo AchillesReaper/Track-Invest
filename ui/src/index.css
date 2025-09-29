@@ -41,7 +41,16 @@ h1 {
   line-height: 1.1;
 }
 
+#google_translate_element,
+.goog-te-banner-frame,
+.goog-logo-link,
+.goog-te-gadget {
+  display: none !important;
+}
 
+.skiptranslate{
+  display: none !important;
+}
 
 @media (prefers-color-scheme: light) {
   :root {

@@ -1,9 +1,10 @@
-import { Divider, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography } from "@mui/material";
+import { Box, Divider, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem, Toolbar, Typography } from "@mui/material";
 import { auth } from "../utils/firebaseConfig";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../utils/contexts";
-import { AccountCircle, Logout, ExpandLess, ExpandMore } from '@mui/icons-material';
+import { Logout, ExpandLess, ExpandMore } from '@mui/icons-material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import GTranslateIcon from '@mui/icons-material/GTranslate';
 import AddToPhotosIcon from '@mui/icons-material/AddToPhotos';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import LockResetIcon from '@mui/icons-material/LockReset';
@@ -22,6 +23,15 @@ export default function DrawerContent(props: {
     const [isOpenSelfPortfolioList, setIsOpenSelfPortfolioList] = useState<boolean>(true);
     const [isOpenSharedPortfolioList, setIsOpenSharedPortfolioList] = useState<boolean>(false);
 
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
+    const availableLanguages: Record<string, string> = {
+        'en': 'English',
+        'zh-CN': '中文（简体）',
+        'zh-TW': '中文（繁體）',
+        'ja': '日本語',
+        'fr': 'Français'
+    };
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
     const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
 
@@ -54,14 +64,40 @@ export default function DrawerContent(props: {
         }
     }
 
+    function handleLanguageChange(lang: string) {
+        setSelectedLanguage(lang);
+        setAnchorEl(null);
+        localStorage.setItem('preferredLang', lang);
+        const googleCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+        if (googleCombo) {
+            googleCombo.value = lang;
+            googleCombo.dispatchEvent(new Event('change'));
+        }
+    }
+
+    useEffect(() => {
+        const preferredLang = localStorage.getItem('preferredLang');
+        if (preferredLang && preferredLang != 'en'){
+            handleLanguageChange(preferredLang);
+        }
+    }, []);
+
     return (
         <div >
             <Toolbar sx={{ backgroundColor: '#1976d2', color: '#fff' }}>
-                <IconButton color="inherit"  >
-                    < AccountCircle />
-                </IconButton>
-                <Typography variant='h6' component="div" sx={{ flexGrow: 1 }}>
-                    {auth.currentUser?.displayName || 'Guest'}
+                <Box>
+                    <IconButton color="inherit" onClick={(event) => setAnchorEl(event.currentTarget)}>
+                        <GTranslateIcon />
+                    </IconButton>
+                    <Menu translate="no" anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+                        {Object.keys(availableLanguages).map((lang) => (
+                            <MenuItem key={lang} selected={lang === selectedLanguage} onClick={() => handleLanguageChange(lang)}>{availableLanguages[lang]}</MenuItem>
+                        ))}
+                    </Menu>
+
+                </Box>
+                <Typography translate="no" variant='h6' component="div" sx={{ flexGrow: 1 }}>
+                    {availableLanguages[selectedLanguage]}
                 </Typography>
             </Toolbar>
             <Divider />
@@ -69,13 +105,13 @@ export default function DrawerContent(props: {
             <List>
                 <ListItemButton onClick={() => setIsOpenSelfPortfolioList(!isOpenSelfPortfolioList)}>
                     <ListItemIcon> <AccountBalanceWalletIcon /> </ListItemIcon>
-                    <ListItemText primary='My Portfolios' />
+                    <ListItemText primary='My Portfolios'/>
                     {isOpenSelfPortfolioList ? <ExpandLess /> : <ExpandMore />}
                 </ListItemButton>
                 {isOpenSelfPortfolioList && selfPortList && Object.keys(selfPortList).length > 0 && Object.keys(selfPortList).map((portId) => (
                     <ListItemButton key={portId} sx={{ pl: 4 }} selected={selectedPortfolio === portId} onClick={() => handlePortfolioSelect(portId)}>
                         <ListItemIcon><ArrowRightAltIcon /></ListItemIcon>
-                        <ListItemText primary={selfPortList[portId].portfolio_name} />
+                        <ListItemText translate="no" primary={selfPortList[portId].portfolio_name} />
                     </ListItemButton>
                 ))}
                 {isOpenSelfPortfolioList && (!selfPortList || Object.keys(selfPortList).length === 0) &&
@@ -93,16 +129,16 @@ export default function DrawerContent(props: {
                 {isOpenSharedPortfolioList && sharedPortList && Object.keys(sharedPortList).length > 0 && Object.keys(sharedPortList).map((portId) => (
                     <ListItemButton key={portId} sx={{ pl: 4 }} selected={selectedPortfolio === portId} onClick={() => handlePortfolioSelect(portId)}>
                         <ListItemIcon><ArrowRightAltIcon /></ListItemIcon>
-                        <ListItemText primary={sharedPortList[portId].portfolio_name} />
+                        <ListItemText translate="no" primary={sharedPortList[portId].portfolio_name} />
                     </ListItemButton>
                 ))}
-                 {isOpenSharedPortfolioList && (!sharedPortList || Object.keys(sharedPortList).length === 0) &&
+                {isOpenSharedPortfolioList && (!sharedPortList || Object.keys(sharedPortList).length === 0) &&
                     <ListItemButton disabled>
                         <ListItemText primary='No portfolios shared with you' />
                     </ListItemButton>
                 }
                 <Divider />
-                
+
                 <ListItemButton onClick={() => props.setIsAddNewPortfolio(true)}>
                     <ListItemIcon> <AddToPhotosIcon /> </ListItemIcon>
                     <ListItemText primary='Add Portfolio' />
@@ -115,7 +151,7 @@ export default function DrawerContent(props: {
                 <Divider />
                 <ListItemButton onClick={() => handleLogOut()}>
                     <ListItemIcon> <Logout /> </ListItemIcon>
-                    <ListItemText primary={`Log Out`} />
+                    <ListItemText primary={`Log Out As (${auth.currentUser?.email})`} />
                 </ListItemButton>
             </List>
 
