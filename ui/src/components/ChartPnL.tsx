@@ -85,51 +85,54 @@ export default function ChartPnL() {
 
     return (
         <div className="R2Card">
-            <Toolbar sx={{ justifyContent: 'center' }}>
-                <ButtonGroup variant="outlined" color='warning' size="small">
-                    <Button onClick={() => handleYearChange('prev')}>
-                        <KeyboardDoubleArrowLeftIcon fontSize="inherit" />
-                    </Button>
-                    <Button >{displayYear}</Button>
-                    <Button onClick={() => handleYearChange('next')} disabled={displayYear === dayjs().format('YYYY')} >
-                        <KeyboardDoubleArrowRightIcon fontSize="inherit" />
-                    </Button>
-                </ButtonGroup>
-            </Toolbar>
-            {xAxisLabels && mktVal && netWorth &&
-                <LineChart
-                    height={300}
-                    grid={{ horizontal: true }}
-                    series={[
-                        { data: selfCapital, label: 'Self Capital', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
-                        { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId', valueFormatter: valueFormatter2D },
-                        { data: mktVal, label: 'Position Value', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
-                        { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
-                    ]}
-                    xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
-                    yAxis={[
-                        {
-                            id: 'leftAxisId',
-                            position: 'left',
-                            valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`,
-                        },
-                        {
-                            id: 'rightAxisId',
-                            position: 'right',
-                            valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
-                        },
-                    ]}
-                    hideLegend
-                    slotProps={{
-                        tooltip: {
-                            sx: {
-                                [`&.${chartsTooltipClasses.root} .${chartsTooltipClasses.valueCell}`]: {
-                                    textAlign: 'right',
+            {xAxisLabels && mktVal && netWorth ?
+                <>
+                    <Toolbar sx={{ justifyContent: 'center' }}>
+                        <ButtonGroup variant="outlined" color='warning' size="small">
+                            <Button onClick={() => handleYearChange('prev')}>
+                                <KeyboardDoubleArrowLeftIcon fontSize="inherit" />
+                            </Button>
+                            <Button >{displayYear}</Button>
+                            <Button onClick={() => handleYearChange('next')} disabled={displayYear === dayjs().format('YYYY')} >
+                                <KeyboardDoubleArrowRightIcon fontSize="inherit" />
+                            </Button>
+                        </ButtonGroup>
+                    </Toolbar>
+                    <LineChart
+                        height={300}
+                        grid={{ horizontal: true }}
+                        series={[
+                            { data: selfCapital, label: 'Self Capital', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
+                            { data: cashBalance, label: 'Cash Balance', yAxisId: 'leftAxisId', valueFormatter: valueFormatter2D },
+                            { data: mktVal, label: 'Position Value', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
+                            { data: netWorth, label: 'Net Worth', yAxisId: 'rightAxisId', valueFormatter: valueFormatter2D },
+                        ]}
+                        xAxis={[{ scaleType: 'point', data: xAxisLabels }]}
+                        yAxis={[
+                            {
+                                id: 'leftAxisId',
+                                position: 'left',
+                                valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`,
+                            },
+                            {
+                                id: 'rightAxisId',
+                                position: 'right',
+                                valueFormatter: (value: number) => `${(value / 1000).toFixed(0)}k`
+                            },
+                        ]}
+                        hideLegend
+                        slotProps={{
+                            tooltip: {
+                                sx: {
+                                    [`&.${chartsTooltipClasses.root} .${chartsTooltipClasses.valueCell}`]: {
+                                        textAlign: 'right',
+                                    },
                                 },
                             },
-                        },
-                    }}
-                />
+                        }}
+                    />
+                </>
+                : <div></div>
             }
 
         </div>

@@ -95,7 +95,7 @@ export default function ChartPositionAllocation() {
                 ?
                 <PieChart  {...setting} />
                 :
-                <div className="flex-1 size-64">no data to display</div>
+                <div></div>
             }
         </div>
     );

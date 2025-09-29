@@ -4,7 +4,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext, PortfolioContext } from "../utils/contexts";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
-import { DateTimePicker } from "@mui/x-date-pickers";
+import { DatePicker } from "@mui/x-date-pickers";
 import axios from "axios";
 import { auth, db } from "../utils/firebaseConfig";
 
@@ -376,7 +376,7 @@ export default function AddTransaction(props: { open: boolean, onClose: () => vo
                         <Grid container spacing={2} my={2}>
                             <Grid size={{ xs: 12, sm: 6 }}>            {/* time */}
                                 <FormControl fullWidth>
-                                    <DateTimePicker
+                                    <DatePicker
                                         label='Time'
                                         value={dayjs(tTime)}
                                         shouldDisableDate={(date: Dayjs) => isDateTimeDisabled(date, portfolioContext?.mtmTimeStamp)}
