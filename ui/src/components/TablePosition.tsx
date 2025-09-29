@@ -57,7 +57,7 @@ export default function TbPosition() {
 
 
     return (
-        <Box sx={{ maxWidth: '100vw', overflowX: 'auto' }}>
+        <Box translate="no" sx={{ maxWidth: '100vw', overflowX: 'auto' }}>
             <DataGrid
                 sx={{ width: '100%' }}
                 rows={tableRows}

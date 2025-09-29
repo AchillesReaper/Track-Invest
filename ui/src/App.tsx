@@ -54,6 +54,7 @@ export default function App() {
                     <CssBaseline />
 
                     <AppBar
+                        translate="no"
                         position="fixed"
                         sx={{
                             width: { md: `calc(100% - ${drawerWidth}px)` },
@@ -92,9 +93,9 @@ export default function App() {
                                 },
                             }}
                         >
-                            <DrawerContent 
-                                setDrawerOpen={setDrawerOpen} 
-                                setIsAddNewPortfolio={SetIsAddNewPortfolio} 
+                            <DrawerContent
+                                setDrawerOpen={setDrawerOpen}
+                                setIsAddNewPortfolio={SetIsAddNewPortfolio}
                             />
                         </Drawer>
 
@@ -109,9 +110,9 @@ export default function App() {
                             }}
                             open
                         >
-                            <DrawerContent 
-                                setDrawerOpen={setDrawerOpen} 
-                                setIsAddNewPortfolio={SetIsAddNewPortfolio} 
+                            <DrawerContent
+                                setDrawerOpen={setDrawerOpen}
+                                setIsAddNewPortfolio={SetIsAddNewPortfolio}
                             />
                         </Drawer>
                     </Box>

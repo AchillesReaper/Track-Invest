@@ -110,7 +110,7 @@ export default function TbTransaction() {
     }, [portfolioContext, portfolioContext?.selectedPortPath, displayYear]);
 
     return (
-        <Box sx={{ maxWidth: '100vw', overflowX: 'auto' }}>
+        <Box translate="no" sx={{ maxWidth: '100vw', overflowX: 'auto' }}>
             <DataGrid
                 rows={tableRows}
                 columns={tableCol}
