@@ -3,7 +3,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 
 import { Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Modal, Select, TextField, Typography } from "@mui/material";
 import CurrencyExchangeOutlinedIcon from '@mui/icons-material/CurrencyExchangeOutlined';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DatePicker } from '@mui/x-date-pickers';
 
 
 import { LoadingBox, MessageBox, styleMainColBox, styleModalBox, valueFormatter2D } from "./ZCommonComponents";
@@ -159,7 +159,7 @@ export default function AddCashFlow(props: { open: boolean, onClose: () => void,
                     <Grid container spacing={2} my={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <FormControl fullWidth>
-                                <DateTimePicker
+                                <DatePicker
                                     label='Time'
                                     value={dayjs(cTime)}
                                     shouldDisableDate={(date: Dayjs) => isDateTimeDisabled(date, portfolioContext!.mtmTimeStamp)}
