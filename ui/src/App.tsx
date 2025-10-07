@@ -136,7 +136,6 @@ export default function App() {
                                 <DetailTables />
                             </Grid>
                         </Grid>
-                        <AddNewPortfolio open={isAddNewPortfolio} onClose={() => SetIsAddNewPortfolio(false)} />
 
                     </Box>
                     <AddNewPortfolio open={isAddNewPortfolio} onClose={() => SetIsAddNewPortfolio(false)} />
