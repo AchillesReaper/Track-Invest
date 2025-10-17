@@ -83,9 +83,9 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         let q = query(collection(db, `portfolios`), where('owner', '==', user.email));
                         selfPortfolioUnsubscribe = onSnapshot(q, (portfolios) => {
                             const selfPortfolioObj = portfolios.docs.reduce((acc, item) => {
-                                acc[item.id] = { 
+                                acc[item.id] = {
                                     portfolio_name: item.data().portfolio_name,
-                                    owner: item.data().owner 
+                                    owner: item.data().owner
                                 };
                                 return acc;
                             }, {} as Record<string, { portfolio_name: string, owner: string }>);
@@ -108,12 +108,12 @@ export const AppContextProvider = ({ children }: { children: React.ReactNode }) 
                         let qShared = query(collection(db, `portfolios`), where('shared_with', 'array-contains', user.email));
                         sharedPortfolioUnsubscribe = onSnapshot(qShared, (portfolios) => {
                             const sharedPortfolioObj = portfolios.docs.reduce((acc, item) => {
-                                acc[item.id] = { 
+                                acc[item.id] = {
                                     portfolio_name: item.data().portfolio_name,
-                                    owner: item.data().owner 
+                                    owner: item.data().owner
                                 };
                                 return acc;
-                            } , {} as Record<string, { portfolio_name: string, owner: string }>);
+                            }, {} as Record<string, { portfolio_name: string, owner: string }>);
                             if (Object.keys(sharedPortfolioObj).length > 0) {
                                 setSharedPortfolioList(sharedPortfolioObj);
                                 console.log('Shared portfolios fetched:', sharedPortfolioObj);
@@ -170,11 +170,11 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
     const [isSelfPortfolio, setIsSelfPortfolio] = useState<boolean>(false)
 
     // portfolio basic info states
-    const [portfolioName, setPortfolioName] = useState<string>('') 
-    const [broker, setBroker] = useState<string>('') 
-    const [note, setNote] = useState<string>('') 
-    const [owner, setOwner] = useState<string>('') 
-    const [createdAt, setCreatedAt] = useState<string>('') 
+    const [portfolioName, setPortfolioName] = useState<string>('')
+    const [broker, setBroker] = useState<string>('')
+    const [note, setNote] = useState<string>('')
+    const [owner, setOwner] = useState<string>('')
+    const [createdAt, setCreatedAt] = useState<string>('')
     const [sharedWithList, setSharedWithList] = useState<string[]>([]) // Initialize with empty array
 
     // portfolio summary states
@@ -236,8 +236,8 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             console.log('appContext:', appContext.selfPortfolioList);
             console.log('selectedPortfolio:', appContext.selectedPortfolio);
         }
+        // Set up listener for portfolio basic info
         try {
-            // Set up listener for portfolio basic info
             const portfolioDocRef = doc(db, portfolioPath);
             portfolioBasicInfoUnsubscribe.current = onSnapshot(portfolioDocRef, (snapshot) => {
                 console.log('Listening to portfolio basic info changes...');
@@ -248,7 +248,7 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
                     setBroker(data.broker);
                     setNote(data.note);
                     setOwner(data.owner);
-                    setCreatedAt(data.created_at? data.created_at : '');
+                    setCreatedAt(data.created_at ? data.created_at : '');
                     setSharedWithList(data.shared_with);
                     console.log(`Portfolio basic info for ${appContext.selectedPortfolio} updated`);
                 } else {
@@ -259,8 +259,8 @@ export const PortfolioContextProvider = ({ children }: { children: React.ReactNo
             console.error('Error setting up portfolio listeners:', error);
         }
 
+        // Set up listener for portfolio summary data
         try {
-            // Set up listener for portfolio summary data
             const portfolioSummaryDocRef = doc(db, `${portfolioPath}/portfolio_summary/current`);
             portfolioSummaryUnsubscribe.current = onSnapshot(portfolioSummaryDocRef, (snapshot) => {
                 if (snapshot.exists()) {
